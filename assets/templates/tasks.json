@@ -1,0 +1,16 @@
+{
+  "id": "tasks",
+  "name": "Tasks",
+  "goal_hint": ["タスク", "todo", "やること", "リマインダー", "Reminders", "Issues"],
+  "pages": [
+    {
+      "page": "*",
+      "regions": [
+        { "slot": "main", "accepts": ["mirror", "native_app"], "size": 0.65 },
+        { "slot": "side", "accepts": ["web"], "size": 0.35 },
+        { "slot": "top", "accepts": ["form"], "size": null },
+        { "slot": "bottom", "accepts": ["timeline"], "size": null }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+// 抜き出しの試験（Rust の断片）。行末の // kind=… がその行の日本語 literal の kind（順に）。注記の無い行は 0 件のはず
+fn draw(ui: &mut egui::Ui) {
+    theme::label(ui, Type::Display, "何を作りたいですか？", c); // kind=hero
+    theme::label(ui, Type::Body, "機能も UI も目的から組み立てます。", c); // kind=lead
+    shell::content_opening(ui, "接続", "必要なときだけ接続します。", None); // kind=label,lead
+    if theme::button(ui, "作る", Variant::Primary).clicked() {} // kind=button
+    let e = egui::TextEdit::singleline(s).hint_text(Type::Body.text("例: 在庫を数える").color(c)); // kind=placeholder
+    theme::icon_button(ui, "×", "提案を閉じる (Esc)"); // kind=text
+    ui.label("読み込み中"); // kind=text
+    ui.heading(&p.title);
+    ui.small("対象と操作を確認してください。"); // kind=lead
+    shell::content_opening(ui, "アプリ", "", Some("＋ 新しいアプリ")); // kind=label,button
+    ui.heading("実行前の確認"); // kind=label
+    let p = "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc";
+    assert_eq!(x, "検査の中の文");
+    // ui.label("comment の中は見ない");
+}
+#[cfg(test)] use super::*;
+#[cfg(test)]
+fn helper() {
+    let s = "ヘルパーの中は見ない";
+}
+fn after(ui: &mut egui::Ui) {
+    ui.label("cfg(test) の部品の後ろも見る"); // kind=text
+}
+#[cfg(test)]
+mod tests {
+    const S: &str = "test の中は見ない";
+    fn t() { let x = "{"; let y = "括弧の後も中なので見ない"; }
+}
+fn tail(ui: &mut egui::Ui) { ui.label("mod tests の後ろも見る"); } // kind=text
+#[cfg(test)]
+const T: &str = "x"; // test only
+fn e(ui: &mut egui::Ui) { ui.label("comment 付きの ; の後ろも見る"); } // kind=text
+#[cfg(test)] use super::*; // for tests
+fn e2(ui: &mut egui::Ui) { ui.label("1 行の cfg(test) の後ろも見る"); } // kind=text
+fn m(k: K) -> &'static str {
+    match k {
+        #[cfg(test)]
+        K::T => "test の腕は見ない",
+        K::A => "match の次の腕は見る", // kind=text
+    }
+}
+struct F {
+    #[cfg(test)]
+    t: u8,
+}
+const L: &str = "field の後の const も見る"; // kind=text
+struct G {
+    #[cfg(test)]
+    t: u8
+}
+const M: &str = "最後の field の後も見る"; // kind=text
+#[cfg(test)]
+fn args(
+    a: u8,
+) {
+    let s = "引数が複数行の test fn の中は見ない";
+}
+fn two(ui: &mut egui::Ui) {
+    if ui.button("保存").clicked() {} if ui.button("同じ行の 2 つ目").clicked() {} // kind=button,button
+    shell::content_opening(ui, "接続 (β)", "選択したUIの構造", None); // kind=label,lead
+}
+// L3-1: ui.add / ui.add_enabled の中の Button::new は button（Label::new は text）
+fn l31(ui: &mut egui::Ui) {
+    if ui.add_enabled(ok, egui::Button::new("② 指定部分だけを取得")).clicked() {} // kind=button
+    ui.add(egui::Button::new(if a { "Issueを取得" } else { "PRを取得" })); // kind=button,button
+    ui.add(egui::Label::new("Label の中は text")); // kind=text
+}
+// L3-2: kind は literal の数ではなく引数の位置で決める（変数の引数・if/else の literal）
+fn l32(ui: &mut egui::Ui) {
+    theme::button_compact(ui, if e { "操作へ切替" } else { "配置を編集" }, Variant::Ghost); // kind=button,button
+    ui.checkbox(&mut b, "範囲を確認した"); // kind=button
+    ui.selectable_label(sel, "選択中の行"); // kind=button
+    ui.radio_value(&mut v, K::A, "片方を選ぶ"); // kind=button
+    shell::content_opening(ui, &title, "選ぶと開く一覧の説明文です", Some("追加する")); // kind=lead,button
+}
+// L3-3: 閉じた呼び出し（title()・tr(k)）の後ろの literal も、開いている呼び出しで決める
+fn l33(ui: &mut egui::Ui) {
+    shell::content_opening(ui, title(), "選ぶと開く一覧の説明文です", Some("足す")); // kind=lead,button
+}
+fn l33b(ui: &mut egui::Ui) {
+    theme::button(ui, if ok() { "保存" } else { "閉じる" }, Variant::Primary); // kind=button,button
+    theme::icon_button(ui, glyph(k), "閉じる (Esc)"); // kind=text
+    if ui.button(tr(k)).clicked() { ui.label("閉じた button の後ろは text"); } // kind=text
+}
+// L3-4: cfg(test) の中の raw 文字列・char の括弧と quote で飛ばしが狂わない
+#[cfg(test)]
+mod t4 {
+    const J: &str = r#"{"a": "b {"}"#;
+    const Q: char = '"';
+    const B: char = '{';
+    const E: char = '\'';
+    fn f() { let s = "raw の後も中なので見ない"; }
+}
+fn l34(ui: &mut egui::Ui) {
+    ui.label("後ろは見る2"); // kind=text
+    ui.label(r"raw の UI 文も見る"); // kind=text
+    ui.label(r#"hash 付きの raw の "UI" 文も見る"#); // kind=text
+}
+// L3-5: where 節・複数行の generics の , で cfg(test) の item が早く終わらない
+#[cfg(test)]
+fn h<T>()
+where
+    T: Clone,
+{
+    let s = "テストの中なので見ないはず";
+}
+#[cfg(test)]
+impl<A,
+    B> X<A, B> {
+    fn f() { let s = "impl の中も見ない"; }
+}
+#[cfg(test)]
+struct S2<A,
+    B> {
+    a: &'static str,
+}
+fn l35(ui: &mut egui::Ui) {
+    ui.label("where の後ろは見る"); // kind=text
+}
+// L3-6: test を含む cfg（all / any・inner の #![cfg(test)]）も飛ばす。not(test)・cfg_attr・feature の名前は本物なので見る
+#[cfg(all(test, feature = "x"))]
+mod t2 { const S: &str = "cfg all test の中"; }
+#[cfg(any(test, feature = "y"))]
+mod t3 { const S: &str = "cfg any test の中"; }
+mod inner {
+    #![cfg(test)]
+    const S: &str = "inner の cfg(test) の中";
+    fn g() { let s = "inner の fn の中"; }
+}
+#[cfg(not(test))]
+fn real1(ui: &mut egui::Ui) { ui.label("not(test) は本物なので見る"); } // kind=text
+#[cfg_attr(test, allow(dead_code))]
+fn real2(ui: &mut egui::Ui) { ui.label("cfg_attr は見る"); } // kind=text
+#[cfg(feature = "test")]
+fn real3(ui: &mut egui::Ui) { ui.label("feature の名前の test は見る"); } // kind=text
+// L3-7: rustfmt が引数ごとに改行した呼び出しも 1 つの文として見る
+fn l37(ui: &mut egui::Ui) {
+    shell::content_opening(
+        ui,
+        "接続",                       // kind=label
+        "必要なときだけ接続します。", // kind=lead
+        None,
+    );
+    theme::label(
+        ui,
+        Type::Display,
+        "仕事も生活も一つの画面で", // kind=hero
+        c,
+    );
+    let e = egui::TextEdit::singleline(s)
+        .hint_text(Type::Body.text("例: 在庫を数える").color(c)); // kind=placeholder
+    if theme::button(
+        ui,
+        "複数行の button", // kind=button
+        Variant::Primary,
+    )
+    .clicked()
+    {}
+}
+// L3-8: log:: / tracing:: は語の境で見る（dialog:: / catalog:: は UI）。.expect( は自分の引数だけ飛ばす
+fn l38(ui: &mut egui::Ui) {
+    dialog::confirm(ui, "削除しますか"); // kind=text
+    catalog::label(ui, "カタログの名前"); // kind=text
+    ui.label(x.expect("expect の中は見ない")); ui.label("同じ行の UI は見る"); // kind=text
+    log::info!("log の中は見ない");
+    tracing::warn!("tracing の中も見ない {}", tr("中の呼び出しも見ない"));
+}

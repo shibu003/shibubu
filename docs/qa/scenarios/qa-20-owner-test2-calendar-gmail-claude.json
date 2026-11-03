@@ -1,0 +1,99 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-20-owner-test2-calendar-gmail-claude",
+  "title": "owner の test2: Calendar・Gmail・claude.ai を 1 つの画面に。chat bar の指示は承認 card の手前で止める",
+  "sources": [
+    "docs/ACCEPTANCE.md §1 原文 test2・§3 test2_calendar_gmail_claude_app（場面・一言目・起きる事・見える物）",
+    "DESIGN.md §6.4 Agent command surface・§9 Cmd/Ctrl+K・§5.3 approved is not execution authorization・§11 確認待ち"
+  ],
+  "scene": "予定・メール・Claude の 3 つを行き来している人",
+  "first_words": "Calendar と Gmail と claude.ai をまとめた画面にして。全部そこから操作できて、chat bar でも指示できるように。",
+  "out_of_scope": "承認より先（予定の作成・招待の送信）。Google の OAuth client を誰の名前で持つか（ACCEPTANCE §3 要確認）",
+  "preconditions": ["test 用の Google account（本番の account を使わない）"],
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 180,
+      "expect": {
+        "present": [
+          { "text": "要接続|接続が必要", "match": "regex" },
+          { "role": "AXButton", "label": "後で接続", "match": "contains" }
+        ],
+        "absent": [
+          { "text": "接続済み", "match": "contains" },
+          { "text": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "match": "regex" }
+        ]
+      },
+      "evidence": "02-plan.png"
+    },
+    {
+      "id": "s3",
+      "intent": "「後で接続」を押して、3 つの面を見る",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "後で接続", "match": "contains" },
+      "timeout_s": 30,
+      "expect": {
+        "present": [
+          { "text": "Calendar|カレンダー|予定", "match": "regex" },
+          { "text": "Gmail|メール", "match": "regex" },
+          { "text": "Claude", "match": "contains" }
+        ],
+        "absent": [{ "text": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "match": "regex" }],
+        "review": ["予定・メール・Claude の面と chat bar が同じ作業面に並ぶ（ACCEPTANCE test2 見える物）"]
+      },
+      "evidence": "03-shape.png"
+    },
+    {
+      "id": "s4",
+      "intent": "人が test 用の Google account で Calendar と Gmail を繋ぐ",
+      "do": "operator",
+      "instruction": "test 用の Google account で Calendar と Gmail を繋ぐ。Claude の面は画面の案内どおり（API key か claude.ai の画面）",
+      "timeout_s": 180,
+      "expect": { "present": [{ "text": "接続済み|Connected|Ready", "match": "regex" }] },
+      "evidence": "04-connected.png"
+    },
+    {
+      "id": "s5",
+      "intent": "Cmd+K で chat bar（command）を開く",
+      "do": "key",
+      "keys": ["cmd", "k"],
+      "expect": { "absent": [{ "text": "確認待ち", "match": "contains" }] },
+      "evidence": "05-command.png",
+      "note": "chat bar の口は DESIGN §9 Cmd/Ctrl+K の command（§6.4 Agent command surface）"
+    },
+    {
+      "id": "s6",
+      "intent": "予定と招待を頼む",
+      "do": "type_focused",
+      "text": "明日の 10 時に A さんと打合せ、招待も送って",
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea", "AXComboBox"], "value": "招待も送って", "match": "contains" }] },
+      "evidence": "06-asked.png"
+    },
+    {
+      "id": "s7",
+      "intent": "Return で頼む（承認 card が出るはず・ここで止める）",
+      "do": "key",
+      "keys": ["return"],
+      "timeout_s": 120,
+      "expect": {
+        "present": [{ "text": "確認待ち", "match": "contains" }],
+        "absent": [{ "text": "送信済み|送信しました|招待しました|作成しました", "match": "regex" }],
+        "review": ["承認 card に予定の中身・招待の宛先・送信元 account が出ていて、承認するまで予定も招待も作られていない（ACCEPTANCE test2・DESIGN §5.3）"]
+      },
+      "evidence": "07-review.png",
+      "note": "runner は承認を押さない。台本はここで終わる"
+    }
+  ]
+}

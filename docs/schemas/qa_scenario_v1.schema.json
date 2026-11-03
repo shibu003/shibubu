@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kangae QA 台本 v1（scripts/qa_run.py が cua-driver の AX 経路で 1 手ずつ実行する）",
+  "description": "1 file = 1 台本 = 初めての人の道（場面 → 一言目 → 手順 → 各手の期待 → 証拠の写真）。仕様（KANGAE_MASTER_SPEC・DESIGN 2.1 と §15・IMPLEMENTATION_TODO §12・docs/ACCEPTANCE.md・docs/MUSIC_WORKSPACE_CASE_STUDY.md）だけから書き、実装は読まない。要素は AX の label / value で指す（pixel の座標は持たない）。意味の検査（id と since の参照・高影響の操作・label の出典が仕様に在るか）は scripts/qa_run.py --check が持つ。書き方は docs/qa/README.md",
+  "type": "object",
+  "required": ["schema", "id", "title", "sources", "scene", "first_words", "out_of_scope", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "qa_scenario_v1" },
+    "id": { "description": "file 名（.json を除く）と同じ", "type": "string", "pattern": "^qa-[0-9]{2}-[a-z0-9-]+$" },
+    "title": { "type": "string", "minLength": 1 },
+    "sources": { "description": "この台本の根拠（仕様の file と節）", "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "scene": { "description": "場面。主語は初めて使う知らない人（owner の Mac・login を前提にしない）", "type": "string", "minLength": 1 },
+    "first_words": { "description": "一言目。手の text の ${FIRST_WORDS} に入る", "type": "string", "minLength": 1 },
+    "out_of_scope": { "description": "スコープ外 1 行", "type": "string", "minLength": 1 },
+    "preconditions": { "description": "人が先に整える事（QA 機の OS 許可・test 用 account など）。runner は読まない", "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "requires_apps": { "description": "無ければ台本ごと 未測（runner が在るかだけ見る）", "type": "array", "items": { "type": "string", "pattern": "^/Applications/[^/]+\\.app$" } },
+    "fixtures": { "description": "file 名 → 中身。runner が一時の dir に書き、${FIXTURES} がその dir になる", "type": "object", "propertyNames": { "pattern": "^[A-Za-z0-9_.-]+$" }, "additionalProperties": { "type": "string" } },
+    "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/step" } }
+  },
+  "$defs": {
+    "roles": {
+      "description": "AX の role（cua-driver の elements[].role）。配列ならどれか 1 つ",
+      "oneOf": [
+        { "type": "string", "pattern": "^AX[A-Za-z]+$" },
+        { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^AX[A-Za-z]+$" } }
+      ]
+    },
+    "how": { "description": "exact（既定・NFKC と空白の畳みの後に一致）/ contains / regex（NFKC 後の文字に re.search）", "enum": ["exact", "contains", "regex"] },
+    "locator": {
+      "description": "要素 1 つを指す。当たりが 0 なら FAIL（label が無い）、2 以上も FAIL（推測で選ばない）。text は label か value のどちらか",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "role": { "$ref": "#/$defs/roles" },
+        "label": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "match": { "$ref": "#/$defs/how" }
+      },
+      "anyOf": [{ "required": ["label"] }, { "required": ["value"] }, { "required": ["text"] }]
+    },
+    "matcher": {
+      "description": "画面に出る / 出てはいけない物。present は min（既定 1）〜 max 件、absent は 0 件",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "role": { "$ref": "#/$defs/roles" },
+        "label": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "match": { "$ref": "#/$defs/how" },
+        "min": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "minimum": 0 }
+      },
+      "anyOf": [{ "required": ["label"] }, { "required": ["value"] }, { "required": ["text"] }, { "required": ["role"] }]
+    },
+    "frame": {
+      "description": "要素 1 つの大きさ（AX の frame・point）。tol の既定は 2",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["of"],
+      "properties": {
+        "of": { "$ref": "#/$defs/locator" },
+        "w": { "type": "number", "exclusiveMinimum": 0 },
+        "h": { "type": "number", "exclusiveMinimum": 0 },
+        "tol": { "type": "number", "minimum": 0 }
+      },
+      "anyOf": [{ "required": ["w"] }, { "required": ["h"] }]
+    },
+    "region": {
+      "description": "窓の端に貼り付いた領域（top = 全幅で一番上・left / right = 縦に長い端の帯）の幅か高さ。AX に領域の要素が無ければ 未測。absent は「その端に帯が無い」",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "edge"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "edge": { "enum": ["top", "left", "right"] },
+        "w": { "type": "number", "exclusiveMinimum": 0 },
+        "h": { "type": "number", "exclusiveMinimum": 0 },
+        "tol": { "type": "number", "minimum": 0 },
+        "absent": { "const": true }
+      },
+      "oneOf": [{ "required": ["w"] }, { "required": ["h"] }, { "required": ["absent"] }]
+    },
+    "compare": {
+      "description": "前の手（since）の時と比べる。frame の same は「動いていない」、value の same: false は「変わった」",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["of", "since", "attr", "same"],
+      "properties": {
+        "of": { "$ref": "#/$defs/locator" },
+        "since": { "type": "string", "pattern": "^s[0-9]{1,2}[a-z]?$" },
+        "attr": { "description": "text = label と value を並べた物", "enum": ["label", "value", "text", "frame"] },
+        "same": { "type": "boolean" },
+        "tol": { "type": "number", "minimum": 0 }
+      }
+    },
+    "file": {
+      "description": "disk の上の file の中身（保存が本当に起きたか）",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "regex"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^\\$\\{(FIXTURES|DATA_DIR)\\}/" },
+        "regex": { "type": "string", "minLength": 1 }
+      }
+    },
+    "expect": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "present": { "type": "array", "items": { "$ref": "#/$defs/matcher" } },
+        "absent": { "type": "array", "items": { "$ref": "#/$defs/matcher" } },
+        "frames": { "type": "array", "items": { "$ref": "#/$defs/frame" } },
+        "regions": { "type": "array", "items": { "$ref": "#/$defs/region" } },
+        "text_min_h": { "description": "AXStaticText の frame の高さの下限（12px 未満の文字が無い事の必要条件）", "type": "number", "exclusiveMinimum": 0 },
+        "named": { "description": "この role の要素は全部 label（AX の名前）を持つ。icon だけの釦にも名前（DESIGN §9）・placeholder は入力欄の名前にならない（§4.2）。title bar の macOS の釦は除く", "$ref": "#/$defs/roles" },
+        "compare": { "type": "array", "items": { "$ref": "#/$defs/compare" } },
+        "files": { "type": "array", "items": { "$ref": "#/$defs/file" } },
+        "review": { "description": "機械で測れない事。runner は 未測 にして写真の名前と並べる（人が見る）", "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "intent", "do", "evidence"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^s[0-9]{1,2}[a-z]?$" },
+        "intent": { "description": "初めての人が何をしようとしているか", "type": "string", "minLength": 1 },
+        "do": {
+          "description": "observe = 見るだけ / click・type = target を AX で押す・打つ / key = 窓に key（例 [\"cmd\",\"k\"]）/ type_focused = 今 focus の在る所に打つ / window = 窓の大きさ / restart = Cmd+Q して同じ KANGAE_DATA_DIR で起動し直す / operator = 人の手（既定は 未測 で止まる・--interactive なら待つ）",
+          "enum": ["observe", "click", "type", "key", "type_focused", "window", "restart", "operator"]
+        },
+        "in": { "description": "dialog = key を送る窓・期待を見る窓・写真を、同じ pid の一番手前の別窓（file を選ぶ画面など）にする。click / type の target は主窓で探す。別窓が無ければ主窓（sheet は主窓の木に入る）", "const": "dialog" },
+        "target": { "$ref": "#/$defs/locator" },
+        "text": { "type": "string", "minLength": 1 },
+        "keys": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[a-z0-9]+$" } },
+        "size": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": { "width": { "type": "integer", "minimum": 320 }, "height": { "type": "integer", "minimum": 320 } }
+        },
+        "instruction": { "description": "operator の手で人がする事", "type": "string", "minLength": 1 },
+        "high_impact": { "description": "送信 / 削除 / 共有 / 取り込み等の label を押す手に要る宣言。押した後に「確認待ち」が出る事を expect.present に書く（出なければ runner が Kangae を止めて FAIL）", "const": "review_only" },
+        "burst": { "description": "操作の直後・期待を見る前に写真を N 枚（<evidence>-b1.png …・撮れた時刻つき）。skeleton と animation の途中（DESIGN §15.2）を人が見るため。expect.review に何を見るかを書く", "type": "integer", "minimum": 1, "maximum": 10 },
+        "settle_s": { "description": "操作の後、見始める前に待つ秒", "type": "number", "minimum": 0 },
+        "timeout_s": { "description": "期待が揃うまで見続ける秒（既定 10）", "type": "number", "minimum": 0 },
+        "expect": { "$ref": "#/$defs/expect" },
+        "evidence": { "description": "写真の名前（docs/internal/qa-runs/<UTC>/<台本 id>/ に置く）", "type": "string", "pattern": "^[0-9]{2}-[a-z0-9-]+\\.png$" },
+        "note": { "type": "string" }
+      },
+      "allOf": [
+        { "if": { "properties": { "do": { "enum": ["click", "type"] } } }, "then": { "required": ["target"] } },
+        { "if": { "properties": { "do": { "enum": ["type", "type_focused"] } } }, "then": { "required": ["text"] } },
+        { "if": { "properties": { "do": { "const": "key" } } }, "then": { "required": ["keys"] } },
+        { "if": { "properties": { "do": { "const": "window" } } }, "then": { "required": ["size"] } },
+        { "if": { "properties": { "do": { "const": "operator" } } }, "then": { "required": ["instruction"] }, "else": { "required": ["expect"] } },
+        { "if": { "required": ["high_impact"] }, "then": { "properties": { "do": { "const": "click" } }, "required": ["expect"] } }
+      ]
+    }
+  }
+}

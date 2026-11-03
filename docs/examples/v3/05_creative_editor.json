@@ -1,0 +1,175 @@
+{
+  "schema_version": "3.0",
+  "id": "example.v3.creative_editor",
+  "version": 1,
+  "title": "動画の編集台",
+  "goal": {
+    "literal_goal": "動画を編集したい",
+    "outcomes": [
+      "手元の動画を並べて、切る位置（marker）を時刻で残せる",
+      "編集そのものは、使う editor を選んだらその app で続ける（handoff）",
+      "cut list を file に書き出せる"
+    ],
+    "assumptions": [
+      "editor は Kangae が作り直さない。編集は既存の app で、候補は接続画面で選ぶ（DESIGN §0.7・ACCEPTANCE R2）",
+      "素材は利用者が選んだ local file だけ。YouTube 等からの取得はしない（TEST-006）"
+    ],
+    "constraints": [
+      "editor 未選択の間、編集に進む button は理由つきで disabled（DESIGN §4.1）",
+      "素材の権利を Kangae が判断しない。取り込みは本人の file だけ"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "edit-root",
+      "component": "column",
+      "children": [
+        {
+          "key": "edit-surface",
+          "component": "source_surface",
+          "role": "primary",
+          "label": "編集 app（未選択）",
+          "props": { "display": "handoff" },
+          "action_ref": "editor.open",
+          "states": { "disabled": "使う editor を選ぶと、その app を開いて続ける。Kangae の中に editor は作らない" }
+        },
+        {
+          "key": "edit-preview",
+          "component": "media",
+          "label": "選んだ素材の確認",
+          "props": { "mode": "playback" },
+          "binding": { "source_ref": "local.project", "path": "selected_clip" },
+          "action_ref": "local.media.toggle"
+        },
+        {
+          "key": "edit-split",
+          "component": "split",
+          "layout": { "ratio": [0.4, 0.6] },
+          "children": [
+            {
+              "key": "edit-clips",
+              "component": "list",
+              "label": "素材",
+              "binding": { "source_ref": "local.project", "path": "clips" },
+              "states": { "empty": "まだ素材がありません。「素材を追加」で file を選ぶ" }
+            },
+            {
+              "key": "edit-markers",
+              "component": "timeline",
+              "label": "切る位置",
+              "binding": { "source_ref": "local.project", "path": "markers" },
+              "states": { "empty": "まだ marker がありません。再生して「ここで切る」" }
+            }
+          ]
+        },
+        {
+          "key": "edit-actions",
+          "component": "row",
+          "children": [
+            {
+              "key": "edit-clip-add",
+              "component": "button",
+              "label": "素材を追加",
+              "props": { "variant": "secondary" },
+              "action_ref": "local.project.add_clip"
+            },
+            {
+              "key": "edit-marker-add",
+              "component": "button",
+              "label": "ここで切る",
+              "props": { "variant": "primary" },
+              "action_ref": "local.project.add_marker"
+            },
+            {
+              "key": "edit-export",
+              "component": "button",
+              "label": "cut list を書き出す",
+              "props": { "variant": "secondary" },
+              "action_ref": "local.project.export_cutlist"
+            }
+          ]
+        }
+      ]
+    },
+    "view_modes": ["use", "build", "inspect", "review"]
+  },
+  "capabilities": [
+    { "id": "editor.open", "provider": null, "readiness": "discoverable", "required_scopes": ["app.open"], "adapter": "handoff" }
+  ],
+  "actions": [
+    {
+      "id": "editor.open",
+      "capability_ref": "editor.open",
+      "effect": "local_write",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "properties": { "clip_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": ["app.open"],
+      "verifier": "state_compare",
+      "requires_approval": false
+    },
+    {
+      "id": "local.media.toggle",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "properties": { "clip_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.project.add_clip",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["file_ref"], "properties": { "file_ref": { "type": "string", "description": "利用者が picker で選んだ file の参照 id" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.project.add_marker",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": {
+        "type": "object",
+        "required": ["clip_id", "position_ms"],
+        "properties": { "clip_id": { "type": "string" }, "position_ms": { "type": "integer", "minimum": 0 }, "note": { "type": "string" } },
+        "additionalProperties": false
+      },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.project.export_cutlist",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["destination_ref"], "properties": { "destination_ref": { "type": "string", "description": "利用者が保存先として選んだ場所の参照 id" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    }
+  ],
+  "sources": [
+    { "id": "local.project", "kind": "local_collection", "readiness": "local", "scope": "app" }
+  ],
+  "workflows": [],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail",
+    "policy_scope": ["local"]
+  },
+  "state": {
+    "readiness": "partial",
+    "execution_mode": "local_ready",
+    "status_message": "素材・marker・書き出しは端末内。編集は editor を選んでから、その app で。"
+  },
+  "metadata": {
+    "corpus": {
+      "prompt": "動画を編集したい",
+      "todo": ["GEN-013", "TEST-006", "LEG-007"],
+      "differs_by": "editor-first: 主役は source_surface（display = handoff）で、Kangae は editor を作らない。継続信号 → timeline / media（DESIGN §7）",
+      "scene": "DESIGN §12.2「動画を編集したい」。素材は本人の file だけ。参考曲・動画の取り込みを「できる前提」にしない"
+    }
+  }
+}

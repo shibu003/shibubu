@@ -1,0 +1,154 @@
+{
+  "elements": [
+    {
+      "role": "AXTextArea",
+      "label": "何を作りたいですか？",
+      "element_token": "t-goal"
+    },
+    {
+      "role": "AXButton",
+      "label": "作る",
+      "element_token": "t-create"
+    },
+    {
+      "role": "AXTextField",
+      "label": "この Project への変更",
+      "element_token": "t-change"
+    },
+    {
+      "role": "AXTextField",
+      "label": "Terminal に打つ",
+      "element_token": "t-term_in"
+    },
+    {
+      "role": "AXButton",
+      "label": "＋ Terminal",
+      "element_token": "t-add_term"
+    },
+    {
+      "role": "AXButton",
+      "label": "repo に保存",
+      "element_token": "t-save_repo"
+    },
+    {
+      "role": "AXButton",
+      "label": "映す",
+      "element_token": "t-mirror"
+    },
+    {
+      "role": "AXButton",
+      "label": "足す",
+      "element_token": "t-add"
+    },
+    {
+      "role": "AXButton",
+      "label": "送る",
+      "element_token": "t-send"
+    },
+    {
+      "role": "AXButton",
+      "label": "走らせる",
+      "element_token": "t-run_tests"
+    },
+    {
+      "role": "AXButton",
+      "label": "↻ 読み直す",
+      "element_token": "t-reload"
+    },
+    {
+      "role": "AXButton",
+      "label": "題名",
+      "element_token": "t-title"
+    },
+    {
+      "role": "AXButton",
+      "label": "保存",
+      "element_token": "t-save"
+    },
+    {
+      "role": "AXButton",
+      "label": "↶ 元に戻す",
+      "element_token": "t-undo"
+    },
+    {
+      "role": "AXButton",
+      "label": "↷ やり直す",
+      "element_token": "t-redo"
+    },
+    {
+      "role": "AXButton",
+      "label": "← 戻る",
+      "element_token": "t-back"
+    },
+    {
+      "role": "AXButton",
+      "label": "Terminal の引き出し",
+      "element_token": "t-drawer"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "確かめています: cargo test を走らせる",
+      "element_token": "t-checking"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "走らせています（cargo test）。結果はこの下に出ます",
+      "element_token": "t-running_cmd"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "終了 code 101",
+      "element_token": "t-exit_code"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "知らない引数 x では Shibubu の画面を開きません",
+      "element_token": "t-usage_refuse"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "失敗",
+      "element_token": "t-failed"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "AI を呼ぶ上限（10 回）に達しました",
+      "element_token": "t-ai_cap"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "人が Terminal に打っている間は、AI の入力は送りません",
+      "element_token": "t-human_typing"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "repo の docs/x.excalidraw に置きました（git status で見られます）",
+      "element_token": "t-saved_line"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "接続済み",
+      "element_token": "t-connected"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "保存しました",
+      "element_token": "t-saved_msg"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "完了",
+      "element_token": "t-finished"
+    },
+    {
+      "role": "AXCheckBox",
+      "label": "メモ",
+      "element_token": "t-memo"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "画面収録の許可が要ります",
+      "element_token": "t-mirror_denied"
+    }
+  ]
+}

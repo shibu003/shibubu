@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# 7 層レビューの git 側（docs/REVIEW_PROCESS.md）。有効化: git config core.hooksPath .githooks
+# merge commit の直前に scripts/merge-gate.sh を打つ。--fast（lint 省略）は KANGAE_GATE_FAST=1 の時だけ。
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+[ -f .git/MERGE_HEAD ] || exit 0
+head=$(cat .git/MERGE_HEAD | head -1)
+branch=$(git for-each-ref --format='%(refname:short)' --points-at "$head" refs/heads | head -1)
+[ -n "$branch" ] || { echo "pre-merge-commit: MERGE_HEAD の branch 名が取れない（gate を手で打つ: bash scripts/merge-gate.sh <branch>）"; exit 1; }
+if [ "${KANGAE_GATE_FAST:-0}" = "1" ]; then bash scripts/merge-gate.sh "$branch" --fast; else bash scripts/merge-gate.sh "$branch"; fi

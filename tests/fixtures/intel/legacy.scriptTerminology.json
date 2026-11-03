@@ -1,0 +1,1 @@
+{"Name":"Legacy suite","Description":"Legacy specific classes.","Commands":{"Reload":{"Name":"reload","Description":"Reload the document."}},"Classes":{"NSApplication":{"Name":"application"},"Document":{"Name":"document"}}}

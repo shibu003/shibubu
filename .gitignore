@@ -1,0 +1,34 @@
+/poc/*/target*/
+/target*/
+/.kangae-data/
+/.shibubu-data/
+.DS_Store
+*.swp
+*.zip
+
+# 開発メモ（public repo には置かない）
+task/
+backlog/
+docs/internal/
+*_PLAN.md
+*_ROADMAP.md
+*_AUDIT.md
+!docs/INCOMPLETE_AUDIT.md
+SCORECARD.md
+STATUS.md
+PROJECT.md
+CLAUDE.md
+AGENTS.md
+.claude/
+arc.md
+task.md
+*.log
+
+# 個人情報・ローカル環境
+.env*
+*.db
+*.sqlite*
+__pycache__/
+
+# 宛先と送り手の住所が入る作業 file（kangae-google outreach-plan の既定の出力）
+outreach-plan*.json

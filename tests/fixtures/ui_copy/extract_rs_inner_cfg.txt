@@ -1,0 +1,5 @@
+#![cfg(test)]
+// L3-6: file の頭の inner attribute #![cfg(test)] = この file は丸ごと test。注記が無い = 1 件も抜き出さない
+fn f(ui: &mut egui::Ui) {
+    ui.label("inner の cfg(test) の file の中は見ない");
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": "3.0", "id": "broken.workflow_missing_action", "version": 1, "title": "workflow の action_refs が無い action を指す",
+  "goal": {"literal_goal": "研究ノートを作りたい", "outcomes": ["研究ノートを作りたい"]},
+  "composition": {"root": {"key": "research-root", "component": "column", "props": {}}},
+  "actions": [{"id": "local.notes.save", "effect": "local_write", "readiness": "preview_only", "input_schema": {"type": "object"}, "required_scopes": []}],
+  "sources": [],
+  "workflows": [{"id": "save-and-export", "action_refs": ["local.notes.save", "local.notes.export"]}],
+  "agent": {"suggestions_enabled": true, "autonomy_level": "suggest_only", "entrypoint": "agent_rail"},
+  "state": {"readiness": "preview", "execution_mode": "local_demo"}
+}

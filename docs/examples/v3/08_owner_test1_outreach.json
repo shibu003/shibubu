@@ -1,0 +1,358 @@
+{
+  "schema_version": "3.0",
+  "id": "example.v3.owner_test1_outreach",
+  "version": 1,
+  "title": "営業の下書きと送信",
+  "goal": {
+    "literal_goal": "LinkedIn の follower と following から AI 開発・founder・engineer の list を作って、営業メールを一括で送れる画面にして。YC の企業と投資家も list に。",
+    "outcomes": [
+      "LinkedIn の follower / following を肩書で絞った list（名前・会社・肩書・連絡先の有無）",
+      "YC 所属の企業・投資家の list（公開の連絡先だけ）",
+      "相手ごとに名前と文が差し替わった下書きを一覧で確認し、「送る」で送信。送信は 1 通ずつ承認",
+      "送った thread の返信の件数と本文を同じ画面で読む（読み取りのみ）"
+    ],
+    "assumptions": [
+      "LinkedIn の公式 API は follower 一覧を開放していない。本人が login 済みの browser tab を読む方式は、利用規約の確認が済むまで繋がない（ACCEPTANCE §3 要確認 ①）",
+      "投資家・企業の gmail address は公開されていない。取るのは公開の連絡先（会社 mail・問い合わせ form）だけ（要確認 ②）",
+      "送信は Gmail の 1 日の上限と、送信者表示・opt-out の規則の範囲（要確認 ③）"
+    ],
+    "constraints": [
+      "無断の一括送信をしない。送信は相手ごとに宛先と本文を見せて承認（AGT-009・TEST-010）",
+      "連絡先・返信・送信成功を捏造しない。送信の成否は Gmail の受領で確かめるまで「未確認」（TODO §12）",
+      "公開されていない address を推測・補完しない"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "outreach-root",
+      "component": "tabs",
+      "children": [
+        {
+          "key": "tab-recipients",
+          "component": "column",
+          "label": "相手の一覧",
+          "children": [
+            {
+              "key": "recipients-table",
+              "component": "table",
+              "role": "primary",
+              "label": "相手",
+              "props": { "columns": ["name", "company", "title", "channel", "source", "consent", "last_touched"] },
+              "binding": { "source_ref": "local.recipients", "path": "items" },
+              "states": { "empty": "まだ相手がいません。LinkedIn / YC を繋いで取り込むか、CSV・手入力で足す" }
+            },
+            {
+              "key": "recipients-detail",
+              "component": "detail",
+              "label": "選択した相手",
+              "visibility": { "when": "has_selection" },
+              "binding": { "source_ref": "local.recipients", "path": "selected" },
+              "states": { "empty": "相手を選ぶと、出所と連絡先の種類が出る" }
+            },
+            {
+              "key": "recipients-actions",
+              "component": "row",
+              "children": [
+                {
+                  "key": "recipients-import-linkedin",
+                  "component": "button",
+                  "label": "LinkedIn から取り込む",
+                  "props": { "variant": "secondary" },
+                  "action_ref": "linkedin.connections.read",
+                  "states": { "disabled": "LinkedIn は未接続。公式 API に follower 一覧が無いので、本人の login 済み tab を読む方式の規約確認が先（要確認 ①）" }
+                },
+                {
+                  "key": "recipients-import-yc",
+                  "component": "button",
+                  "label": "YC の一覧を取り込む",
+                  "props": { "variant": "secondary" },
+                  "action_ref": "yc.directory.read",
+                  "states": { "disabled": "公開 directory の読み取りを許可すると取り込める。公開の連絡先だけ" }
+                },
+                {
+                  "key": "recipients-import-csv",
+                  "component": "button",
+                  "label": "CSV を読み込む",
+                  "props": { "variant": "secondary" },
+                  "action_ref": "local.recipients.import_csv"
+                },
+                {
+                  "key": "recipients-add",
+                  "component": "button",
+                  "label": "手で追加",
+                  "props": { "variant": "primary" },
+                  "action_ref": "local.recipients.add"
+                },
+                {
+                  "key": "recipients-opt-out",
+                  "component": "button",
+                  "label": "送らない相手にする",
+                  "props": { "variant": "ghost" },
+                  "action_ref": "local.recipients.mark_opt_out"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "tab-drafts",
+          "component": "column",
+          "label": "下書き",
+          "children": [
+            {
+              "key": "drafts-split",
+              "component": "split",
+              "layout": { "ratio": [0.4, 0.6] },
+              "children": [
+                {
+                  "key": "drafts-list",
+                  "component": "list",
+                  "label": "相手ごとの下書き",
+                  "binding": { "source_ref": "local.drafts", "path": "items" },
+                  "states": { "empty": "まだ下書きがありません。相手を選んで「相手に合わせた下書きを作る」" }
+                },
+                {
+                  "key": "drafts-main",
+                  "component": "column",
+                  "role": "primary",
+                  "children": [
+                    {
+                      "key": "drafts-editor",
+                      "component": "editor",
+                      "label": "本文（相手ごとに差し替え済み）",
+                      "binding": { "source_ref": "local.drafts", "path": "selected.body" }
+                    },
+                    {
+                      "key": "drafts-facts",
+                      "component": "list",
+                      "label": "本文に使った根拠",
+                      "binding": { "source_ref": "local.drafts", "path": "selected.evidence" },
+                      "states": { "empty": "根拠はまだありません。相手の公開情報から入れる" }
+                    },
+                    {
+                      "key": "drafts-actions",
+                      "component": "row",
+                      "children": [
+                        {
+                          "key": "drafts-generate",
+                          "component": "button",
+                          "label": "相手に合わせた下書きを作る",
+                          "props": { "variant": "secondary" },
+                          "action_ref": "local.drafts.generate"
+                        },
+                        {
+                          "key": "drafts-save-gmail",
+                          "component": "button",
+                          "label": "Gmail の下書きに保存",
+                          "props": { "variant": "secondary" },
+                          "action_ref": "gmail.drafts.create",
+                          "states": { "disabled": "Gmail を繋ぐと保存できる（承認つき）" }
+                        },
+                        {
+                          "key": "drafts-send",
+                          "component": "button",
+                          "label": "確認して送る",
+                          "props": { "variant": "primary" },
+                          "action_ref": "gmail.messages.send",
+                          "states": { "disabled": "Gmail を繋ぎ、相手ごとの宛先と本文を確認してから。1 通ずつ承認。1 日の上限と opt-out 表示を守る" }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "tab-results",
+          "component": "column",
+          "label": "送信結果と返信",
+          "children": [
+            {
+              "key": "results-table",
+              "component": "table",
+              "label": "送信結果",
+              "props": { "columns": ["recipient", "sent_at", "status"] },
+              "binding": { "source_ref": "local.send_log", "path": "items" },
+              "states": { "empty": "まだ送っていません。状態は 未送信 / 送信済み（受領あり） / 失敗 / 未確認 の 4 つ" }
+            },
+            {
+              "key": "replies-list",
+              "component": "list",
+              "label": "返信",
+              "binding": { "source_ref": "gmail", "path": "replies" },
+              "states": {
+                "requires_connection": "Gmail を繋ぐと、送った thread の返信をここに読み込む（読み取りのみ）",
+                "empty": "返信はまだありません"
+              }
+            },
+            {
+              "key": "replies-refresh",
+              "component": "button",
+              "label": "返信を読み込む",
+              "props": { "variant": "secondary" },
+              "action_ref": "gmail.threads.read",
+              "states": { "disabled": "Gmail を繋ぐまで" }
+            }
+          ]
+        }
+      ]
+    },
+    "view_modes": ["use", "build", "inspect", "run", "review"]
+  },
+  "capabilities": [
+    { "id": "linkedin.connections.read", "provider": "linkedin", "readiness": "requires_connection", "required_scopes": ["browser_tab.read"], "adapter": "cua_browser_tab" },
+    { "id": "yc.directory.read", "provider": "ycombinator", "readiness": "discoverable", "required_scopes": ["web.public.read"], "adapter": "web_fetch" },
+    { "id": "gmail.drafts.create", "provider": "google", "readiness": "requires_connection", "required_scopes": ["mail.compose"], "adapter": "api" },
+    { "id": "gmail.messages.send", "provider": "google", "readiness": "requires_connection", "required_scopes": ["mail.send"], "adapter": "api" },
+    { "id": "gmail.threads.read", "provider": "google", "readiness": "requires_connection", "required_scopes": ["mail.read"], "adapter": "api" }
+  ],
+  "actions": [
+    {
+      "id": "local.recipients.add",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "company": { "type": "string" },
+          "title": { "type": "string" },
+          "channel": { "type": "string", "description": "公開の連絡先（会社 mail・問い合わせ form）。推測で埋めない" },
+          "source_note": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.recipients.import_csv",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["file_ref"], "properties": { "file_ref": { "type": "string", "description": "利用者が picker で選んだ file の参照 id" } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "imported": { "type": "integer" }, "duplicates": { "type": "integer" } } },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.recipients.mark_opt_out",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["recipient_id"], "properties": { "recipient_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "linkedin.connections.read",
+      "capability_ref": "linkedin.connections.read",
+      "effect": "external_read",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "properties": { "title_filter": { "type": "array", "items": { "type": "string" } } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "people": { "type": "array" }, "observed_at": { "type": "string" } } },
+      "required_scopes": ["browser_tab.read"],
+      "verifier": "read_back",
+      "requires_approval": true
+    },
+    {
+      "id": "yc.directory.read",
+      "capability_ref": "yc.directory.read",
+      "effect": "external_read",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "properties": { "query": { "type": "string" } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "companies": { "type": "array" }, "observed_at": { "type": "string" } } },
+      "required_scopes": ["web.public.read"],
+      "verifier": "read_back",
+      "requires_approval": false
+    },
+    {
+      "id": "local.drafts.generate",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": {
+        "type": "object",
+        "required": ["recipient_ids"],
+        "properties": { "recipient_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 }, "template_id": { "type": "string" } },
+        "additionalProperties": false
+      },
+      "output_schema": { "type": "object", "properties": { "draft_ids": { "type": "array" } } },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "gmail.drafts.create",
+      "capability_ref": "gmail.drafts.create",
+      "effect": "external_write",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["draft_id"], "properties": { "draft_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": ["mail.compose"],
+      "verifier": "read_back",
+      "requires_approval": true
+    },
+    {
+      "id": "gmail.messages.send",
+      "capability_ref": "gmail.messages.send",
+      "effect": "external_send",
+      "readiness": "requires_connection",
+      "input_schema": {
+        "type": "object",
+        "required": ["account_id", "recipient_id", "draft_id"],
+        "properties": { "account_id": { "type": "string" }, "recipient_id": { "type": "string" }, "draft_id": { "type": "string" } },
+        "additionalProperties": false
+      },
+      "output_schema": { "type": "object", "properties": { "status": { "enum": ["sent_confirmed", "failed", "outcome_unknown"] }, "provider_message_id": { "type": "string" } } },
+      "required_scopes": ["mail.send"],
+      "verifier": "source_receipt",
+      "requires_approval": true
+    },
+    {
+      "id": "gmail.threads.read",
+      "capability_ref": "gmail.threads.read",
+      "effect": "external_read",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["account_id"], "properties": { "account_id": { "type": "string" }, "thread_ids": { "type": "array", "items": { "type": "string" } } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "replies": { "type": "array" }, "observed_at": { "type": "string" } } },
+      "required_scopes": ["mail.read"],
+      "verifier": "read_back",
+      "requires_approval": false
+    }
+  ],
+  "sources": [
+    { "id": "local.recipients", "kind": "local_collection", "readiness": "local", "scope": "app" },
+    { "id": "local.drafts", "kind": "local_collection", "readiness": "local", "scope": "app" },
+    { "id": "local.send_log", "kind": "local_collection", "readiness": "local", "scope": "app" },
+    { "id": "linkedin", "kind": "external_optional", "readiness": "requires_connection", "provider": "linkedin", "last_observed_at": null },
+    { "id": "yc_directory", "kind": "public_web", "readiness": "requires_connection", "provider": "ycombinator", "last_observed_at": null },
+    { "id": "gmail", "kind": "external_api", "readiness": "requires_connection", "provider": "google", "last_observed_at": null }
+  ],
+  "workflows": [
+    { "id": "draft_review_send", "action_refs": ["local.drafts.generate", "gmail.drafts.create", "gmail.messages.send"], "approval": "exact_payload_per_recipient" },
+    { "id": "replies_refresh", "action_refs": ["gmail.threads.read"], "approval": "none" }
+  ],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "ask_before_external_effects",
+    "entrypoint": "agent_rail",
+    "policy_scope": ["local.recipients", "local.drafts", "gmail.messages.send:approval_required_per_message", "no_bulk_send", "no_address_guessing"]
+  },
+  "state": {
+    "readiness": "partial",
+    "execution_mode": "local_ready",
+    "status_message": "一覧と下書きは端末内で作れる。取り込みと送信は接続と承認の後。送信の成否は受領で確かめるまで未確認。"
+  },
+  "metadata": {
+    "corpus": {
+      "prompt": "LinkedIn の follower と following から AI 開発・founder・engineer の list を作って、営業メールを一括で送れる画面にして。YC の企業と投資家も list に。",
+      "todo": ["ACCEPTANCE test1", "AGT-009", "TEST-010", "RUN-007", "LEG-007"],
+      "differs_by": "tabs（一覧 / 下書き / 結果）。list → 相手別 draft（local）→ 送信は external_send + 承認 gate、返信は external_read。送信結果に outcome_unknown を持つ",
+      "scene": "owner の受け入れ test1（docs/ACCEPTANCE.md §3）。要確認 ①②③ は assumptions に残したまま。相手・返信・成功を 1 件も入れていない",
+      "open_questions": ["ACCEPTANCE §3 test1 要確認 ①（LinkedIn の自動読み取りと規約）", "②（非公開 address は取らない）", "③（送信上限と特定電子メール法）"]
+    }
+  }
+}

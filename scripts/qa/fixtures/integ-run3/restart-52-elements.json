@@ -1,0 +1,491 @@
+{
+"elements": [
+{
+"role": "AXWindow",
+"label": "Shibubu",
+"element_token": "s0000019f:0"
+},
+{
+"role": "AXStaticText",
+"label": "Shibubu",
+"value": "Shibubu",
+"element_token": "s0000019f:1"
+},
+{
+"role": "AXStaticText",
+"label": "Home",
+"value": "Home",
+"element_token": "s0000019f:2"
+},
+{
+"role": "AXButton",
+"label": "•••",
+"element_token": "s0000019f:3"
+},
+{
+"role": "AXButton",
+"label": "提案 (⌘⇧P)",
+"element_token": "s0000019f:4"
+},
+{
+"role": "AXTextField",
+"label": "作りたいこと",
+"element_token": "s0000019f:5"
+},
+{
+"role": "AXButton",
+"label": "＋ 新しいアプリ",
+"element_token": "s0000019f:6"
+},
+{
+"role": "AXCheckBox",
+"label": "Home",
+"value": "1",
+"element_token": "s0000019f:7"
+},
+{
+"role": "AXCheckBox",
+"label": "Apps",
+"value": "0",
+"element_token": "s0000019f:8"
+},
+{
+"role": "AXCheckBox",
+"label": "Runs",
+"value": "0",
+"element_token": "s0000019f:9"
+},
+{
+"role": "AXCheckBox",
+"label": "Connections",
+"value": "0",
+"element_token": "s0000019f:10"
+},
+{
+"role": "AXCheckBox",
+"label": "開発環境",
+"value": "0",
+"element_token": "s0000019f:11"
+},
+{
+"role": "AXStaticText",
+"label": "何を作りたいですか？",
+"value": "何を作りたいですか？",
+"element_token": "s0000019f:12"
+},
+{
+"role": "AXTextArea",
+"label": "何を作りたいですか？",
+"element_token": "s0000019f:13"
+},
+{
+"role": "AXButton",
+"label": "作る",
+"element_token": "s0000019f:14"
+},
+{
+"role": "AXButton",
+"label": "タイマー",
+"element_token": "s0000019f:15"
+},
+{
+"role": "AXButton",
+"label": "在庫管理",
+"element_token": "s0000019f:16"
+},
+{
+"role": "AXButton",
+"label": "研究ノート",
+"element_token": "s0000019f:17"
+},
+{
+"role": "AXStaticText",
+"label": "アプリ",
+"value": "アプリ",
+"element_token": "s0000019f:18"
+},
+{
+"role": "AXCheckBox",
+"label": "開発環境",
+"value": "0",
+"element_token": "s0000019f:19"
+},
+{
+"role": "AXButton",
+"element_token": "s0000019f:20"
+},
+{
+"role": "AXButton",
+"element_token": "s0000019f:21"
+},
+{
+"role": "AXButton",
+"element_token": "s0000019f:22"
+},
+{
+"role": "AXMenuBar",
+"element_token": "s0000019f:23"
+},
+{
+"role": "AXMenuBarItem",
+"label": "Apple",
+"element_token": "s0000019f:24"
+},
+{
+"role": "AXMenu",
+"element_token": "s0000019f:25"
+},
+{
+"role": "AXMenuItem",
+"label": "About This Mac",
+"element_token": "s0000019f:26"
+},
+{
+"role": "AXMenuItem",
+"label": "System Information",
+"element_token": "s0000019f:27"
+},
+{
+"role": "AXMenuItem",
+"label": "System Settings…、2 updates",
+"element_token": "s0000019f:28"
+},
+{
+"role": "AXMenuItem",
+"label": "App Store",
+"element_token": "s0000019f:29"
+},
+{
+"role": "AXMenuItem",
+"label": "Recent Items",
+"element_token": "s0000019f:30"
+},
+{
+"role": "AXMenu",
+"element_token": "s0000019f:31"
+},
+{
+"role": "AXMenuItem",
+"label": "App Store",
+"element_token": "s0000019f:32"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “App Store” in Finder",
+"element_token": "s0000019f:33"
+},
+{
+"role": "AXMenuItem",
+"label": "Google Chrome",
+"element_token": "s0000019f:34"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “Google Chrome” in Finder",
+"element_token": "s0000019f:35"
+},
+{
+"role": "AXMenuItem",
+"label": "Shibubu",
+"element_token": "s0000019f:36"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “Shibubu” in Finder",
+"element_token": "s0000019f:37"
+},
+{
+"role": "AXMenuItem",
+"label": "Shibubu",
+"element_token": "s0000019f:38"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “Shibubu” in Finder",
+"element_token": "s0000019f:39"
+},
+{
+"role": "AXMenuItem",
+"label": "Shibubu",
+"element_token": "s0000019f:40"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “Shibubu” in Finder",
+"element_token": "s0000019f:41"
+},
+{
+"role": "AXMenuItem",
+"label": "Shibubu",
+"element_token": "s0000019f:42"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “Shibubu” in Finder",
+"element_token": "s0000019f:43"
+},
+{
+"role": "AXMenuItem",
+"label": "Shibubu",
+"element_token": "s0000019f:44"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “Shibubu” in Finder",
+"element_token": "s0000019f:45"
+},
+{
+"role": "AXMenuItem",
+"label": "Shibubu",
+"element_token": "s0000019f:46"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “Shibubu” in Finder",
+"element_token": "s0000019f:47"
+},
+{
+"role": "AXMenuItem",
+"label": "Shibubu",
+"element_token": "s0000019f:48"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “Shibubu” in Finder",
+"element_token": "s0000019f:49"
+},
+{
+"role": "AXMenuItem",
+"label": "TextEdit",
+"element_token": "s0000019f:50"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “TextEdit” in Finder",
+"element_token": "s0000019f:51"
+},
+{
+"role": "AXMenuItem",
+"label": "README.md",
+"element_token": "s0000019f:52"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “README.md” in Finder",
+"element_token": "s0000019f:53"
+},
+{
+"role": "AXMenuItem",
+"label": "README.md",
+"element_token": "s0000019f:54"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “README.md” in Finder",
+"element_token": "s0000019f:55"
+},
+{
+"role": "AXMenuItem",
+"label": "README.md",
+"element_token": "s0000019f:56"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “README.md” in Finder",
+"element_token": "s0000019f:57"
+},
+{
+"role": "AXMenuItem",
+"label": "README.md",
+"element_token": "s0000019f:58"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “README.md” in Finder",
+"element_token": "s0000019f:59"
+},
+{
+"role": "AXMenuItem",
+"label": "notes.md",
+"element_token": "s0000019f:60"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “notes.md” in Finder",
+"element_token": "s0000019f:61"
+},
+{
+"role": "AXMenuItem",
+"label": "notes.md",
+"element_token": "s0000019f:62"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “notes.md” in Finder",
+"element_token": "s0000019f:63"
+},
+{
+"role": "AXMenuItem",
+"label": "notes.md",
+"element_token": "s0000019f:64"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “notes.md” in Finder",
+"element_token": "s0000019f:65"
+},
+{
+"role": "AXMenuItem",
+"label": "notes.md",
+"element_token": "s0000019f:66"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “notes.md” in Finder",
+"element_token": "s0000019f:67"
+},
+{
+"role": "AXMenuItem",
+"label": "notes.md",
+"element_token": "s0000019f:68"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “notes.md” in Finder",
+"element_token": "s0000019f:69"
+},
+{
+"role": "AXMenuItem",
+"label": "w19-3b-1792865441.md",
+"element_token": "s0000019f:70"
+},
+{
+"role": "AXMenuItem",
+"label": "Show “w19-3b-1792865441.md” in Finder",
+"element_token": "s0000019f:71"
+},
+{
+"role": "AXMenuItem",
+"label": "Google Drive",
+"element_token": "s0000019f:72"
+},
+{
+"role": "AXMenuItem",
+"label": "Preboot",
+"element_token": "s0000019f:73"
+},
+{
+"role": "AXMenuItem",
+"label": "Preboot",
+"element_token": "s0000019f:74"
+},
+{
+"role": "AXMenuItem",
+"label": "Shibubu",
+"element_token": "s0000019f:75"
+},
+{
+"role": "AXMenuItem",
+"label": "Clear Menu",
+"element_token": "s0000019f:76"
+},
+{
+"role": "AXMenuItem",
+"label": "Force Quit…",
+"element_token": "s0000019f:77"
+},
+{
+"role": "AXMenuItem",
+"label": "Force Quit Shibubu",
+"element_token": "s0000019f:78"
+},
+{
+"role": "AXMenuItem",
+"label": "Sleep",
+"element_token": "s0000019f:79"
+},
+{
+"role": "AXMenuItem",
+"label": "Restart…",
+"element_token": "s0000019f:80"
+},
+{
+"role": "AXMenuItem",
+"label": "Restart",
+"element_token": "s0000019f:81"
+},
+{
+"role": "AXMenuItem",
+"label": "Shut Down…",
+"element_token": "s0000019f:82"
+},
+{
+"role": "AXMenuItem",
+"label": "Shut Down",
+"element_token": "s0000019f:83"
+},
+{
+"role": "AXMenuItem",
+"label": "Lock Screen",
+"element_token": "s0000019f:84"
+},
+{
+"role": "AXMenuItem",
+"label": "Log Out Sample Person…",
+"element_token": "s0000019f:85"
+},
+{
+"role": "AXMenuItem",
+"label": "Log Out Sample Person",
+"element_token": "s0000019f:86"
+},
+{
+"role": "AXMenuBarItem",
+"label": "Shibubu",
+"element_token": "s0000019f:87"
+},
+{
+"role": "AXMenu",
+"element_token": "s0000019f:88"
+},
+{
+"role": "AXMenuItem",
+"label": "About shibubu",
+"element_token": "s0000019f:89"
+},
+{
+"role": "AXMenuItem",
+"label": "Services",
+"element_token": "s0000019f:90"
+},
+{
+"role": "AXMenu",
+"element_token": "s0000019f:91"
+},
+{
+"role": "AXMenuItem",
+"label": "サービス設定…",
+"element_token": "s0000019f:92"
+},
+{
+"role": "AXMenuItem",
+"label": "Hide shibubu",
+"element_token": "s0000019f:93"
+},
+{
+"role": "AXMenuItem",
+"label": "Hide Others",
+"element_token": "s0000019f:94"
+},
+{
+"role": "AXMenuItem",
+"label": "Quit shibubu",
+"element_token": "s0000019f:95"
+},
+{
+"role": "AXMenuItem",
+"label": "終了（ほかのウインドウは保持）",
+"element_token": "s0000019f:96"
+}
+]
+}

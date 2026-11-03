@@ -1,0 +1,15 @@
+{
+  "about": "余計なキャッチコピー 0 の語の表（DESIGN.md §15.2-3・4）。scripts/check_ui_copy.py と src/refine/mod.rs の両方がこの file を読む（表を 2 か所に書かない）。規則の説明と allowlist は docs/ui-copy-rules.md",
+  "dekimasu_endings": ["できます", "られます", "めます", "せます", "べます", "えます", "けます", "れます", "ねます"],
+  "dekimasu_trailing": ["。", "．"],
+  "ad_words": ["まず", "から組み立て", "ひとことで", "一言で", "かんたん", "簡単に", "すぐに", "あなたの", "最適な", "シームレス", "を一か所で", "を一箇所で", "を一ヶ所で", "ましょう"],
+  "exclaim": ["!", "！"],
+  "sentence_ends": ["。", "．", "？", "?", "！", "!"],
+  "state_endings": ["ません", "ない", "なし", "です", "でした", "失敗しました"],
+  "state_prefix": "未",
+  "fact_endings": ["ません", "ない", "なし", "中", "中…", "済み", "件", "失敗しました", "ください"],
+  "name_max_width": 16,
+  "next_step_max_width": 30,
+  "hero_max_width": 10,
+  "lead_min_width": 8
+}

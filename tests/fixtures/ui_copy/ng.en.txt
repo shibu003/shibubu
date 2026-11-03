@@ -1,0 +1,12 @@
+# 赤のはずの英語の行（UI-1）。kind<TAB>text<TAB>赤にする規則（各行はその規則 1 つだけで赤＝負の対照に使う）。self-test が読む（UI-1）
+button	Show Recent Items	en-case
+button	Delete page.	en-period
+status	Not connected.	en-period
+placeholder	Describe what you want to make.	en-period
+error	Sorry, that didn't work	en-word
+status	Diagrams isn't available yet	en-word
+status	Saved successfully	en-word
+status	Waiting for the original app to answer the request	en-status-long
+status	Imported octo/repo · src. No code was run.	en-period
+label	Deletes this part only. The app's data stays.	en-period
+status	Running, with Accessibility · clicks stay unverified until you press Check again	en-status-long

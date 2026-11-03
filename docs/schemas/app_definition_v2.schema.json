@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kangae.local/app_definition_v2.schema.json",
+  "title": "Kangae AppDefinition v2 — extensible recursive composition (proposal)",
+  "description": "Declarative UI. Namespaced type_id resolved by trusted runtime component registry; this schema alone cannot attest capabilities or safety.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "name", "purpose", "sources", "capabilities", "entities", "actions", "views", "workflows"],
+  "properties": {
+    "schema_version": {"const": "2.0"},
+    "id": {"$ref": "#/$defs/id"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 120},
+    "purpose": {"type": "string", "minLength": 1, "maxLength": 1000},
+    "sources": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/source"}},
+    "capabilities": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/capability"}},
+    "entities": {"type": "array", "maxItems": 128, "items": {"$ref": "#/$defs/entity"}},
+    "actions": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/action"}},
+    "views": {"type": "array", "minItems": 1, "maxItems": 40, "items": {"$ref": "#/$defs/view"}},
+    "workflows": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/workflow"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._-]{1,79}$"},
+    "namespaced_id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*(\\.[a-z][a-z0-9_-]*)+(@[0-9]+)?$", "maxLength": 128},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "display_name", "adapter_kind"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "display_name": {"type": "string", "minLength": 1, "maxLength": 120},
+        "adapter_kind": {"enum": ["api", "mcp", "cua", "repo", "local", "provider_surface"]}
+      }
+    },
+    "capability": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source_id", "catalog_ref", "effect", "verification", "approval"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "source_id": {"$ref": "#/$defs/id"},
+        "catalog_ref": {"$ref": "#/$defs/namespaced_id"},
+        "effect": {"enum": ["read", "external_write", "execute"]},
+        "verification": {"enum": ["read_back", "state_compare", "human_review", "unavailable"]},
+        "approval": {"enum": ["runtime_policy", "always", "none"]}
+      }
+    },
+    "entity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "identity_key", "fields"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "identity_key": {"type": "string", "minLength": 1, "maxLength": 80},
+        "fields": {"type": "array", "minItems": 1, "maxItems": 120,
+          "items": {"type": "object", "additionalProperties": false, "required": ["name", "type"],
+            "properties": {"name": {"$ref": "#/$defs/id"}, "type": {"enum": ["string", "boolean", "number", "date", "datetime", "url", "object_ref", "string_list", "bytes_ref"]}}
+          }
+        }
+      }
+    },
+    "action": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "capability_id"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "capability_id": {"$ref": "#/$defs/id"},
+        "target_entity_id": {"$ref": "#/$defs/id"}
+      }
+    },
+    "predicate": {
+      "type": "object", "additionalProperties": false, "required": ["state_key", "equals"],
+      "properties": {"state_key": {"type": "string", "minLength": 1, "maxLength": 120}, "equals": {"type": ["string", "boolean", "number", "null"]}}
+    },
+    "node": {
+      "type": "object", "additionalProperties": false,
+      "required": ["key", "type_id", "label"],
+      "properties": {
+        "key": {"$ref": "#/$defs/id"},
+        "type_id": {"$ref": "#/$defs/namespaced_id"},
+        "label": {"type": "string", "minLength": 1, "maxLength": 160},
+        "priority": {"enum": ["primary", "secondary", "supporting"]},
+        "role": {"enum": ["navigation", "primary", "context", "activity", "controls", "detail", "content", "approval"]},
+        "data_ref": {"$ref": "#/$defs/id"},
+        "action_ref": {"$ref": "#/$defs/id"},
+        "when": {"$ref": "#/$defs/predicate"},
+        "props": {"type": "object", "maxProperties": 24, "propertyNames": {"pattern": "^[a-z][a-z0-9_]{0,40}$"},
+          "additionalProperties": {"anyOf": [
+            {"type": ["string", "number", "boolean", "null"], "maxLength": 300},
+            {"type": "array", "maxItems": 20, "items": {"type": ["string", "number", "boolean"]}}
+          ]}},
+        "children": {"type": "array", "maxItems": 120, "items": {"$ref": "#/$defs/node"}}
+      }
+    },
+    "view": {
+      "type": "object", "additionalProperties": false, "required": ["id", "label", "root"],
+      "properties": {"id": {"$ref": "#/$defs/id"}, "label": {"type": "string", "minLength": 1, "maxLength": 120}, "when": {"$ref": "#/$defs/predicate"}, "root": {"$ref": "#/$defs/node"}}
+    },
+    "step": {
+      "type": "object", "additionalProperties": false, "required": ["id", "action_id", "after"],
+      "properties": {"id": {"$ref": "#/$defs/id"}, "action_id": {"$ref": "#/$defs/id"}, "after": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}}
+    },
+    "workflow": {
+      "type": "object", "additionalProperties": false, "required": ["id", "label", "trigger", "steps"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "label": {"type": "string", "minLength": 1, "maxLength": 120},
+        "trigger": {"enum": ["manual", "event", "scheduled"]},
+        "steps": {"type": "array", "maxItems": 120, "items": {"$ref": "#/$defs/step"}}
+      }
+    }
+  }
+}

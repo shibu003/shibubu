@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "id": "inventory",
+  "prompt": "商品の在庫を見やすくしたい",
+  "goal": {
+    "objective": "在庫の確認と更新を簡単にする",
+    "success_signal": "商品と数量を検索・変更し、CSVから読み込める"
+  },
+  "requirements": [
+    {
+      "id": "inventory_goal",
+      "statement": "商品の在庫を見やすくしたい",
+      "origin": "explicit",
+      "necessity": "essential",
+      "confidence": 1
+    },
+    {
+      "id": "import",
+      "statement": "手元のCSVから読み込める",
+      "origin": "inferred",
+      "necessity": "useful",
+      "confidence": 0.65
+    }
+  ],
+  "needs": [
+    {
+      "id": "records",
+      "description": "商品の一覧と数量",
+      "effect": "local_write",
+      "status": "planned_local"
+    },
+    {
+      "id": "csv_import",
+      "description": "任意のCSVファイルを読み込む",
+      "effect": "read",
+      "status": "proposed"
+    }
+  ],
+  "source_policy": "optional_connections",
+  "candidate_sources": [],
+  "ui_intents": [
+    {
+      "id": "inventory_list",
+      "purpose": "一覧・検索・インライン数量変更",
+      "primary": true,
+      "representation_hint": "dense table"
+    },
+    {
+      "id": "import_view",
+      "purpose": "ユーザー指定ファイルの取り込み",
+      "primary": false
+    }
+  ],
+  "questions": [],
+  "verification_plan": [
+    "CSV未選択でも空の在庫リストを編集できる",
+    "CRM・クラウド・スマホを既定接続しない"
+  ]
+}

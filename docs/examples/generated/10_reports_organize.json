@@ -1,0 +1,541 @@
+{
+  "actions": [
+    {
+      "effect": "local_read",
+      "id": "local.reports.filter",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": false,
+      "verifier": "local_state"
+    },
+    {
+      "effect": "local_write",
+      "id": "local.reports.add",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "High",
+              "Medium",
+              "Low"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "Open",
+              "In progress",
+              "Resolved"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": false,
+      "verifier": "local_state"
+    },
+    {
+      "effect": "local_write",
+      "id": "local.reports.update_status",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "Open",
+              "In progress",
+              "Resolved"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "status"
+        ],
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": false,
+      "verifier": "local_state"
+    },
+    {
+      "effect": "local_write",
+      "id": "local.reports.update_detail",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "item_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "detail"
+        ],
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": false,
+      "verifier": "local_state"
+    },
+    {
+      "effect": "destructive",
+      "id": "local.reports.delete",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": true,
+      "verifier": "local_state"
+    },
+    {
+      "effect": "local_write",
+      "id": "local.reports.import_csv",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "file_ref": {
+            "description": "利用者が picker で選んだ file の参照 id。path は書かない",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_ref"
+        ],
+        "type": "object"
+      },
+      "output_schema": {
+        "properties": {
+          "imported": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": false,
+      "verifier": "local_state"
+    }
+  ],
+  "agent": {
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail",
+    "policy_scope": [
+      "local"
+    ],
+    "suggestions_enabled": true
+  },
+  "capabilities": [],
+  "composition": {
+    "root": {
+      "children": [
+        {
+          "action_ref": "local.reports.filter",
+          "binding": {
+            "path": "filter",
+            "source_ref": "local.reports"
+          },
+          "children": [],
+          "component": "form",
+          "key": "reports-search",
+          "label": "Filter",
+          "props": {
+            "fields": [
+              {
+                "input": "text",
+                "label": "Search バグ",
+                "name": "query"
+              }
+            ]
+          },
+          "user_locked": false
+        },
+        {
+          "action_ref": "local.reports.add",
+          "binding": {
+            "path": "draft",
+            "source_ref": "local.reports"
+          },
+          "children": [],
+          "component": "form",
+          "key": "reports-entry",
+          "label": "Add",
+          "props": {
+            "fields": [
+              {
+                "input": "text",
+                "label": "Title",
+                "name": "title"
+              },
+              {
+                "input": "select",
+                "label": "Severity",
+                "name": "severity",
+                "options": [
+                  "High",
+                  "Medium",
+                  "Low"
+                ]
+              },
+              {
+                "input": "select",
+                "label": "Status",
+                "name": "status",
+                "options": [
+                  "Open",
+                  "In progress",
+                  "Resolved"
+                ]
+              }
+            ]
+          },
+          "user_locked": false
+        },
+        {
+          "children": [
+            {
+              "binding": {
+                "path": "items",
+                "source_ref": "local.reports"
+              },
+              "children": [],
+              "component": "table",
+              "key": "reports-table",
+              "label": "バグ",
+              "props": {
+                "columns": [
+                  "title",
+                  "severity",
+                  "status",
+                  "reported_at"
+                ]
+              },
+              "role": "primary",
+              "states": {
+                "empty": "No バグ yet. Start with “Add”"
+              },
+              "user_locked": false
+            },
+            {
+              "children": [
+                {
+                  "action_ref": "local.reports.update_status",
+                  "binding": {
+                    "path": "selected",
+                    "source_ref": "local.reports"
+                  },
+                  "children": [],
+                  "component": "form",
+                  "key": "reports-status-form",
+                  "label": "Change Status",
+                  "props": {
+                    "fields": [
+                      {
+                        "input": "select",
+                        "label": "Status",
+                        "name": "status",
+                        "options": [
+                          "Open",
+                          "In progress",
+                          "Resolved"
+                        ]
+                      }
+                    ]
+                  },
+                  "user_locked": false
+                },
+                {
+                  "binding": {
+                    "path": "selected.detail",
+                    "source_ref": "local.reports"
+                  },
+                  "children": [],
+                  "component": "editor",
+                  "key": "reports-detail-editor",
+                  "label": "Details and steps to reproduce",
+                  "props": {},
+                  "user_locked": false
+                },
+                {
+                  "action_ref": "local.reports.update_detail",
+                  "children": [],
+                  "component": "button",
+                  "key": "reports-detail-editor-save",
+                  "label": "Save Details and steps to reproduce",
+                  "props": {
+                    "variant": "secondary"
+                  },
+                  "user_locked": false
+                },
+                {
+                  "action_ref": "local.reports.delete",
+                  "children": [],
+                  "component": "button",
+                  "key": "reports-delete",
+                  "label": "Delete",
+                  "props": {
+                    "variant": "danger"
+                  },
+                  "user_locked": false
+                }
+              ],
+              "component": "column",
+              "key": "reports-selected",
+              "label": "Selected バグ",
+              "props": {},
+              "role": "context",
+              "user_locked": false,
+              "visibility": {
+                "when": "has_selection"
+              }
+            }
+          ],
+          "component": "split",
+          "key": "reports-split",
+          "layout": {
+            "ratio": [
+              0.6,
+              0.4
+            ]
+          },
+          "props": {},
+          "user_locked": false
+        },
+        {
+          "children": [
+            {
+              "action_ref": "local.reports.import_csv",
+              "children": [],
+              "component": "button",
+              "key": "reports-import",
+              "label": "Import CSV",
+              "props": {
+                "variant": "secondary"
+              },
+              "user_locked": false
+            }
+          ],
+          "component": "row",
+          "key": "reports-actions",
+          "props": {},
+          "user_locked": false
+        }
+      ],
+      "component": "column",
+      "key": "reports-root",
+      "props": {},
+      "user_locked": false
+    },
+    "view_modes": [
+      "use",
+      "build",
+      "review"
+    ]
+  },
+  "goal": {
+    "assumptions": [
+      "端末内だけで動く。外部アカウント・スマホ・web login は使わない"
+    ],
+    "constraints": [
+      "利用者の承認なく外部のデータを読まない・送らない",
+      "削除は確認の後（DESIGN §4.1）"
+    ],
+    "literal_goal": "バグの報告をまとめたい",
+    "outcomes": [
+      "バグを一覧で見て、絞り込める",
+      "Statusをその場で変えられる",
+      "閉じて開き直しても残る",
+      "手元の CSV から読み込める"
+    ]
+  },
+  "id": "generated.reports_organize",
+  "metadata": {
+    "composer": {
+      "cadence": null,
+      "confidence": 0.9,
+      "discovery": [],
+      "errors": [],
+      "evidence": [
+        "述語「まとめ」",
+        "物「バグ」"
+      ],
+      "goal_plan": {
+        "candidate_sources": [],
+        "goal": {
+          "objective": "バグの確認と更新を簡単にする",
+          "success_signal": "バグを一覧で見て、絞り込める"
+        },
+        "id": "reports_organize",
+        "needs": [
+          {
+            "description": "バグを端末内で扱う（filter / add / update_status / update_detail / delete / import_csv）",
+            "effect": "local_write",
+            "id": "reports_local",
+            "status": "planned_local"
+          }
+        ],
+        "prompt": "バグの報告をまとめたい",
+        "questions": [],
+        "requirements": [
+          {
+            "confidence": 0.9,
+            "id": "outcome_1",
+            "necessity": "essential",
+            "origin": "explicit",
+            "statement": "バグを一覧で見て、絞り込める"
+          },
+          {
+            "confidence": 0.81,
+            "id": "outcome_2",
+            "necessity": "useful",
+            "origin": "inferred",
+            "statement": "Statusをその場で変えられる"
+          },
+          {
+            "confidence": 0.81,
+            "id": "outcome_3",
+            "necessity": "useful",
+            "origin": "inferred",
+            "statement": "閉じて開き直しても残る"
+          },
+          {
+            "confidence": 0.81,
+            "id": "outcome_4",
+            "necessity": "useful",
+            "origin": "inferred",
+            "statement": "手元の CSV から読み込める"
+          }
+        ],
+        "schema_version": "1.0",
+        "source_policy": "local_only",
+        "ui_intents": [
+          {
+            "id": "reports_table",
+            "primary": true,
+            "purpose": "See バグ in a list and filter it",
+            "representation_hint": "table"
+          }
+        ],
+        "verification_plan": [
+          "ready な action は全部 validate_invocation の smoke を通る",
+          "ready でない action を指す node は states.disabled に理由がある",
+          "state は BuildVerifier の判定（ready / partial）のまま。接続していない物を ready と言わない"
+        ]
+      },
+      "interpreter": "rule_based",
+      "job": "organize",
+      "rationale": {
+        "reports-actions": "操作を 1 行に（主操作は region に 1 つ・副操作は同じ行: DESIGN §4.1）",
+        "reports-delete": "バグに「Delete」の操作がある（action local.reports.delete）",
+        "reports-detail-editor": "Details and steps to reproduceは本文 → editor（DESIGN §7: text edit → editor）",
+        "reports-detail-editor-save": "editor の内容は保存の操作で残す（local_write・取り消せる）",
+        "reports-entry": "入力の頻度が高いので form を上に常設（DESIGN §7: interaction frequency）",
+        "reports-import": "バグに「Import CSV」の操作がある（action local.reports.import_csv）",
+        "reports-root": "縦に積む（ページ → 区画。card で包まない: DESIGN §3）",
+        "reports-search": "主役が利用者の増やす一覧なので検索を置く（CD-11 規則 1）",
+        "reports-selected": "選択した 1 件だけを扱う文脈（選んだ時だけ出す）",
+        "reports-split": "主役に 60% を渡す split（DESIGN §7: main focus region >= 60%）",
+        "reports-status-form": "Statusは作った後に変える欄 → 選択した 1 件の form",
+        "reports-table": "records で並べる欄が 3 つ以上 → table（DESIGN §7）"
+      },
+      "rejected": [
+        {
+          "reason": "score 0.350 < 0.453: missing actions would have to be added later (undoable, but extra work)",
+          "strategy": "minimal"
+        }
+      ],
+      "solutions": [
+        {
+          "scores": {
+            "connection_cost": 0.0,
+            "latency": 0.1,
+            "reversibility": 0.9,
+            "risk": 0.1,
+            "utility": 0.87
+          },
+          "strategy": "local_first",
+          "summary": "Run everything on this Mac · no connection needed",
+          "total": 0.453
+        },
+        {
+          "scores": {
+            "connection_cost": 0.0,
+            "latency": 0.05,
+            "reversibility": 0.95,
+            "risk": 0.04,
+            "utility": 0.55
+          },
+          "strategy": "minimal",
+          "summary": "Only the main flow (no imports, side lists or suggestions)",
+          "total": 0.35
+        }
+      ],
+      "strategy": "local_first",
+      "subject": "バグの報告",
+      "unknowns": []
+    }
+  },
+  "schema_version": "3.0",
+  "sources": [
+    {
+      "id": "local.reports",
+      "kind": "local_collection",
+      "readiness": "local",
+      "scope": "app"
+    }
+  ],
+  "state": {
+    "execution_mode": "local_ready",
+    "readiness": "ready",
+    "status_message": "Works on this Mac · no connection needed"
+  },
+  "title": "バグの報告",
+  "version": 1,
+  "workflows": []
+}

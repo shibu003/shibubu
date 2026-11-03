@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- tests/intel.rs が xi:include の先として渡す小さい Standard Suite（形は /System/Library/ScriptingDefinitions/CocoaStandard.sdef）-->
+<dictionary>
+	<suite name="Standard Suite" code="????" description="Common classes and commands for all applications.">
+		<command name="open" code="aevtodoc" description="Open a document."/>
+		<command name="count" code="corecnte" description="Return the number of elements of a particular class within an object."/>
+		<command name="delete" code="coredelo" description="Delete an object."/>
+		<class name="application" code="capp" description="The application&apos;s top-level scripting object.">
+			<property name="name" code="pnam" type="text" access="r"/>
+		</class>
+	</suite>
+</dictionary>

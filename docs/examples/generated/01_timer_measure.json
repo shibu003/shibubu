@@ -1,0 +1,277 @@
+{
+  "actions": [
+    {
+      "effect": "local_write",
+      "id": "local.timer.toggle",
+      "input_schema": {
+        "additionalProperties": false,
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": false,
+      "verifier": "local_state"
+    },
+    {
+      "effect": "local_write",
+      "id": "local.timer.reset",
+      "input_schema": {
+        "additionalProperties": false,
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": false,
+      "verifier": "local_state"
+    },
+    {
+      "effect": "local_write",
+      "id": "local.timer.save_settings",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "duration_minutes": {
+            "maximum": 1440,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "duration_minutes"
+        ],
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": false,
+      "verifier": "local_state"
+    }
+  ],
+  "agent": {
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail",
+    "policy_scope": [
+      "local"
+    ],
+    "suggestions_enabled": true
+  },
+  "capabilities": [],
+  "composition": {
+    "root": {
+      "children": [
+        {
+          "binding": {
+            "path": "remaining_display",
+            "source_ref": "local.timer"
+          },
+          "children": [],
+          "component": "text",
+          "key": "timer-display",
+          "label": "Time left",
+          "props": {
+            "style": "timer"
+          },
+          "role": "primary",
+          "user_locked": false
+        },
+        {
+          "children": [
+            {
+              "action_ref": "local.timer.toggle",
+              "children": [],
+              "component": "button",
+              "key": "timer-toggle",
+              "label": "Start / Pause",
+              "props": {
+                "variant": "primary"
+              },
+              "user_locked": false
+            },
+            {
+              "action_ref": "local.timer.reset",
+              "children": [],
+              "component": "button",
+              "key": "timer-reset",
+              "label": "Reset",
+              "props": {
+                "variant": "secondary"
+              },
+              "user_locked": false
+            }
+          ],
+          "component": "row",
+          "key": "timer-controls",
+          "props": {},
+          "user_locked": false
+        },
+        {
+          "action_ref": "local.timer.save_settings",
+          "binding": {
+            "path": "settings",
+            "source_ref": "local.timer"
+          },
+          "children": [],
+          "component": "form",
+          "key": "timer-settings",
+          "label": "Settings",
+          "props": {
+            "fields": [
+              {
+                "input": "integer",
+                "label": "Minutes",
+                "name": "duration_minutes"
+              }
+            ]
+          },
+          "user_locked": false
+        }
+      ],
+      "component": "column",
+      "key": "timer-root",
+      "props": {},
+      "user_locked": false
+    },
+    "view_modes": [
+      "use",
+      "build",
+      "review"
+    ]
+  },
+  "goal": {
+    "assumptions": [
+      "端末内だけで動く。外部アカウント・スマホ・web login は使わない"
+    ],
+    "constraints": [
+      "利用者の承認なく外部のデータを読まない・送らない"
+    ],
+    "literal_goal": "タイマーを作って",
+    "outcomes": [
+      "開始・一時停止・リセットができる",
+      "設定した時間（分）が、閉じて開き直しても残る"
+    ]
+  },
+  "id": "generated.timer_measure",
+  "metadata": {
+    "composer": {
+      "cadence": null,
+      "confidence": 0.75,
+      "discovery": [],
+      "errors": [],
+      "evidence": [
+        "物「タイマー」の既定",
+        "物「タイマー」"
+      ],
+      "goal_plan": {
+        "candidate_sources": [],
+        "goal": {
+          "objective": "指定した時間を計って知らせる",
+          "success_signal": "開始・一時停止・リセットができる"
+        },
+        "id": "timer_measure",
+        "needs": [
+          {
+            "description": "タイマーを端末内で扱う（toggle / reset / save_settings）",
+            "effect": "local_write",
+            "id": "timer_local",
+            "status": "planned_local"
+          }
+        ],
+        "prompt": "タイマーを作って",
+        "questions": [],
+        "requirements": [
+          {
+            "confidence": 0.75,
+            "id": "outcome_1",
+            "necessity": "essential",
+            "origin": "explicit",
+            "statement": "開始・一時停止・リセットができる"
+          },
+          {
+            "confidence": 0.68,
+            "id": "outcome_2",
+            "necessity": "useful",
+            "origin": "inferred",
+            "statement": "設定した時間（分）が、閉じて開き直しても残る"
+          }
+        ],
+        "schema_version": "1.0",
+        "source_policy": "local_only",
+        "ui_intents": [
+          {
+            "id": "timer_display",
+            "primary": true,
+            "purpose": "Show the time left in large type",
+            "representation_hint": "text"
+          }
+        ],
+        "verification_plan": [
+          "ready な action は全部 validate_invocation の smoke を通る",
+          "ready でない action を指す node は states.disabled に理由がある",
+          "state は BuildVerifier の判定（ready / partial）のまま。接続していない物を ready と言わない"
+        ]
+      },
+      "interpreter": "rule_based",
+      "job": "measure",
+      "rationale": {
+        "timer-controls": "操作を 1 行に（主操作は region に 1 つ・副操作は同じ行: DESIGN §4.1）",
+        "timer-display": "残り時間（状態が 1 つ）→ 大きな text（DESIGN §7）",
+        "timer-reset": "タイマーに「Reset」の操作がある（action local.timer.reset）",
+        "timer-root": "縦に積む（ページ → 区画。card で包まない: DESIGN §3）",
+        "timer-settings": "設定（分）は閉じても残す",
+        "timer-toggle": "タイマーに「Start / Pause」の操作がある（action local.timer.toggle）"
+      },
+      "rejected": [
+        {
+          "reason": "score 0.350 < 0.445: missing actions would have to be added later (undoable, but extra work)",
+          "strategy": "minimal"
+        }
+      ],
+      "solutions": [
+        {
+          "scores": {
+            "connection_cost": 0.0,
+            "latency": 0.1,
+            "reversibility": 0.9,
+            "risk": 0.05,
+            "utility": 0.825
+          },
+          "strategy": "local_first",
+          "summary": "Run everything on this Mac · no connection needed",
+          "total": 0.445
+        },
+        {
+          "scores": {
+            "connection_cost": 0.0,
+            "latency": 0.05,
+            "reversibility": 0.95,
+            "risk": 0.04,
+            "utility": 0.55
+          },
+          "strategy": "minimal",
+          "summary": "Only the main flow (no imports, side lists or suggestions)",
+          "total": 0.35
+        }
+      ],
+      "strategy": "local_first",
+      "subject": "タイマー",
+      "unknowns": []
+    }
+  },
+  "schema_version": "3.0",
+  "sources": [
+    {
+      "id": "local.timer",
+      "kind": "local_state",
+      "readiness": "local",
+      "scope": "app"
+    }
+  ],
+  "state": {
+    "execution_mode": "local_ready",
+    "readiness": "ready",
+    "status_message": "Works on this Mac · no connection needed"
+  },
+  "title": "タイマー",
+  "version": 1,
+  "workflows": []
+}

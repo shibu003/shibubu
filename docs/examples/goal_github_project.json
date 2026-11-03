@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "id": "github_project",
+  "prompt": "GitHubのIssueから作業の優先順位を見たい",
+  "goal": {
+    "objective": "Issueを見ながら優先順位を整理する",
+    "success_signal": "選択したリポジトリのIssueが一覧表示され優先順位を編集できる"
+  },
+  "requirements": [
+    {
+      "id": "github",
+      "statement": "GitHub Issueを使う",
+      "origin": "explicit",
+      "necessity": "essential",
+      "confidence": 1
+    },
+    {
+      "id": "sorting",
+      "statement": "優先順位を編集できる",
+      "origin": "inferred",
+      "necessity": "useful",
+      "confidence": 0.75
+    }
+  ],
+  "needs": [
+    {
+      "id": "issue_read",
+      "description": "対象のIssueを読み込む",
+      "effect": "read",
+      "status": "needs_connection"
+    },
+    {
+      "id": "local_priority",
+      "description": "独自優先度を端末に保存",
+      "effect": "local_write",
+      "status": "planned_local"
+    }
+  ],
+  "source_policy": "requested_connection",
+  "candidate_sources": [
+    {
+      "id": "github",
+      "label": "GitHub",
+      "kind": "api",
+      "evidence": "user_named"
+    }
+  ],
+  "ui_intents": [
+    {
+      "id": "issue_queue",
+      "purpose": "優先順位付きIssue一覧",
+      "primary": true,
+      "representation_hint": "table-list"
+    },
+    {
+      "id": "selected_issue",
+      "purpose": "選択Issueの詳細と根拠",
+      "primary": false,
+      "representation_hint": "detail"
+    }
+  ],
+  "questions": [
+    {
+      "id": "repo_choice",
+      "text": "どのGitHubリポジトリのIssueを使いますか？",
+      "blocking_need_id": "issue_read",
+      "reason": "identity",
+      "suggested_default": "先にデモ画面を作る"
+    }
+  ],
+  "verification_plan": [
+    "アクセス許可前は実Issueを読まない",
+    "ローカル優先度の変更がGitHub Issue編集と混同されない"
+  ]
+}

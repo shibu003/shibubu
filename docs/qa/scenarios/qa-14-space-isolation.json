@@ -1,0 +1,198 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-14-space-isolation",
+  "title": "仕事と個人に同じ名前の人がいても、他の space の情報が混ざらない",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12 他アカウント/他Spaceの情報が混在しない・§9 M8 Space/Account scope",
+    "KANGAE_MASTER_SPEC.md §15 UC-13 同じ名前の人物が仕事/個人両方にいても情報混入しない・§9 Access Label・§14.1",
+    "DESIGN.md §10 Cross-account personal/work access cannot be inferred … Default to isolated app spaces"
+  ],
+  "scene": "仕事の連絡先と個人の連絡先を別々の app で持つ人。両方に「山田 太郎」がいる",
+  "first_words": "仕事の連絡先を管理したい",
+  "out_of_scope": "同じ service の account 2 つ（仕事 / 個人の Google）を繋いだ時の混ざり（test 用 account 2 つが要る）",
+  "fixtures": {
+    "work.csv": "名前,会社,メモ\n山田 太郎,株式会社サンプル,見積りは来週\n",
+    "private.csv": "名前,関係,メモ\n山田 太郎,友人,誕生日は5月\n"
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す（仕事の app）",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": { "present": [{ "text": "まだデータがありません", "match": "contains" }] },
+      "evidence": "02-work-empty.png"
+    },
+    {
+      "id": "s3",
+      "intent": "CSV の読み込みを押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "読み込", "match": "contains" },
+      "in": "dialog",
+      "expect": { "present": [{ "role": "AXButton", "text": "^(開く|Open)$", "match": "regex" }] },
+      "evidence": "03-open-panel.png"
+    },
+    {
+      "id": "s4",
+      "intent": "Cmd+Shift+G で場所を打つ欄を出す",
+      "do": "key",
+      "keys": ["cmd", "shift", "g"],
+      "in": "dialog",
+      "expect": { "present": [{ "role": "AXButton", "text": "^(開く|Open)$", "match": "regex" }] },
+      "evidence": "04-goto.png"
+    },
+    {
+      "id": "s5",
+      "intent": "仕事の CSV の場所を打つ",
+      "do": "type_focused",
+      "text": "${FIXTURES}/work.csv",
+      "in": "dialog",
+      "expect": { "present": [{ "value": "work.csv", "match": "contains" }] },
+      "evidence": "05-path.png"
+    },
+    {
+      "id": "s6",
+      "intent": "Return でその場所へ移る",
+      "do": "key",
+      "keys": ["return"],
+      "in": "dialog",
+      "settle_s": 1,
+      "expect": { "present": [{ "text": "work.csv", "match": "contains" }] },
+      "evidence": "06-selected.png"
+    },
+    {
+      "id": "s7",
+      "intent": "Return で開く",
+      "do": "key",
+      "keys": ["return"],
+      "in": "dialog",
+      "settle_s": 1,
+      "timeout_s": 30,
+      "expect": { "present": [{ "text": "見積りは来週", "match": "contains" }] },
+      "evidence": "07-work-loaded.png"
+    },
+    {
+      "id": "s8",
+      "intent": "Cmd+N で次の app を始める",
+      "do": "key",
+      "keys": ["cmd", "n"],
+      "expect": {
+        "present": [{ "text": "何を作りたいですか？", "match": "contains" }],
+        "absent": [{ "text": "見積りは来週", "match": "contains" }]
+      },
+      "evidence": "08-new.png"
+    },
+    {
+      "id": "s9",
+      "intent": "個人の app を頼む",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "個人の連絡先を管理したい",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "個人の連絡先を管理したい" }] },
+      "evidence": "09-typed-private.png"
+    },
+    {
+      "id": "s10",
+      "intent": "「作る」を押す（個人の app）",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "present": [{ "text": "まだデータがありません", "match": "contains" }],
+        "absent": [{ "text": "見積りは来週", "match": "contains" }]
+      },
+      "evidence": "10-private-empty.png",
+      "note": "同じ名前の人がいる仕事の data を、新しい個人の app に持ち込まない"
+    },
+    {
+      "id": "s11",
+      "intent": "CSV の読み込みを押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "読み込", "match": "contains" },
+      "in": "dialog",
+      "expect": { "present": [{ "role": "AXButton", "text": "^(開く|Open)$", "match": "regex" }] },
+      "evidence": "11-open-panel.png"
+    },
+    {
+      "id": "s12",
+      "intent": "Cmd+Shift+G で場所を打つ欄を出す",
+      "do": "key",
+      "keys": ["cmd", "shift", "g"],
+      "in": "dialog",
+      "expect": { "present": [{ "role": "AXButton", "text": "^(開く|Open)$", "match": "regex" }] },
+      "evidence": "12-goto.png"
+    },
+    {
+      "id": "s13",
+      "intent": "個人の CSV の場所を打つ",
+      "do": "type_focused",
+      "text": "${FIXTURES}/private.csv",
+      "in": "dialog",
+      "expect": { "present": [{ "value": "private.csv", "match": "contains" }] },
+      "evidence": "13-path.png"
+    },
+    {
+      "id": "s14",
+      "intent": "Return でその場所へ移る",
+      "do": "key",
+      "keys": ["return"],
+      "in": "dialog",
+      "settle_s": 1,
+      "expect": { "present": [{ "text": "private.csv", "match": "contains" }] },
+      "evidence": "14-selected.png"
+    },
+    {
+      "id": "s15",
+      "intent": "Return で開く",
+      "do": "key",
+      "keys": ["return"],
+      "in": "dialog",
+      "settle_s": 1,
+      "timeout_s": 30,
+      "expect": {
+        "present": [{ "text": "誕生日は5月", "match": "contains" }],
+        "absent": [{ "text": "見積りは来週", "match": "contains" }]
+      },
+      "evidence": "15-private-loaded.png"
+    },
+    {
+      "id": "s16",
+      "intent": "個人の app の中で Cmd+K を開く",
+      "do": "key",
+      "keys": ["cmd", "k"],
+      "expect": { "absent": [{ "text": "見積りは来週", "match": "contains" }] },
+      "evidence": "16-command.png"
+    },
+    {
+      "id": "s17",
+      "intent": "同じ名前の人を探す",
+      "do": "type_focused",
+      "text": "山田 太郎",
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea", "AXComboBox"], "value": "山田 太郎" }] },
+      "evidence": "17-search.png"
+    },
+    {
+      "id": "s18",
+      "intent": "Return で探す",
+      "do": "key",
+      "keys": ["return"],
+      "timeout_s": 60,
+      "settle_s": 2,
+      "expect": {
+        "absent": [{ "text": "見積りは来週", "match": "contains" }],
+        "review": ["個人の app の中で、仕事の app の山田 太郎の memo が出ていない。出すなら「他の space」と明示して許可を求めている（DESIGN §10）"]
+      },
+      "evidence": "18-isolated.png"
+    }
+  ]
+}

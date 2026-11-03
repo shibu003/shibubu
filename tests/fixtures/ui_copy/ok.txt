@@ -1,0 +1,11 @@
+# 緑のはずの行。kind<TAB>text（kind = text / button / label / placeholder / hero / lead）
+button	作る
+button	＋ 新しいアプリ
+label	宛先
+text	まだデータがありません
+text	保存エラー: {e}
+text	先にウィンドウを検出してください
+text	まだやる事がありません。「追加する」で 1 つ目を書く
+placeholder	例: 仕事の進捗を一か所で管理したい
+hero	何を作りたいですか？
+lead	{} 件

@@ -1,0 +1,19 @@
+Shibubu
+Copyright 2026 Shibubu
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party software:
+- The Rust crates that Shibubu depends on, with their versions, licenses and
+  license texts, are listed in Shibubu.app/Contents/Resources/THIRD-PARTY-NOTICES.txt.
+  To write the same list from source:
+  python3 scripts/release/third_party_notices.py --out THIRD-PARTY-NOTICES.txt
+- vendor/ holds patched copies of third-party crates. Each keeps its own
+  license files.
+- Icons: Phosphor Icons (MIT, https://github.com/phosphor-icons/core), bundled as
+  the Phosphor Bold font by the egui-phosphor 0.9.0 crate (MIT OR Apache-2.0).
+- Provider logos: brand logos of AI services and agents from
+  @lobehub/icons-static-svg 1.95.1 (MIT, https://github.com/lobehub/lobe-icons),
+  rendered to PNG in assets/provider-logos (see its README.md and LICENSE).
+  Each logo is a trademark of its owner. Aider, Droid and Crush have no bundled
+  logo (reasons in assets/provider-logos/README.md).

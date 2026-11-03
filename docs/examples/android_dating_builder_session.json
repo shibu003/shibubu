@@ -1,0 +1,63 @@
+{
+  "artifact_kind": "builder_session_example",
+  "version": "0.9-draft",
+  "status": "not_implemented",
+  "user_goal": "AndroidをMacに表示し、Dating Appの会話・返信案・送信・ダッシュボードを統合する",
+  "builder_stage": "needs_user_decision",
+  "unresolved_terms": [
+    {
+      "term": "clippy",
+      "candidate": "scrcpy",
+      "relationship": "unconfirmed",
+      "reason": "Androidミラーリング手段として調査候補。名称の同一性は未確認"
+    }
+  ],
+  "feature_proposals": [
+    {"id": "connect_android", "state": "candidate", "needs_confirmation": true},
+    {"id": "mirror_screen", "state": "candidate", "needs_confirmation": true},
+    {"id": "read_conversations", "state": "blocked_until_provider_and_permissions", "needs_confirmation": true},
+    {"id": "suggest_replies", "state": "preview_only", "needs_confirmation": false},
+    {"id": "edit_drafts", "state": "preview_ready", "needs_confirmation": false},
+    {"id": "send_message", "state": "disabled_until_verified_and_approved", "needs_confirmation": true},
+    {"id": "status_dashboard", "state": "preview_ready", "needs_confirmation": false},
+    {"id": "send_verification_and_audit", "state": "planned", "needs_confirmation": false}
+  ],
+  "questions": [
+    {
+      "id": "provider_app",
+      "question": "どのDating Appですか？",
+      "required": true,
+      "options": [],
+      "selected": null
+    },
+    {
+      "id": "send_mode",
+      "question": "送信方法を選んでください",
+      "required": true,
+      "options": ["draft_only", "review_each_send", "permitted_rule_based_auto"],
+      "selected": "review_each_send",
+      "default": true
+    },
+    {
+      "id": "conversation_data_consent",
+      "question": "会話データへのアクセスとAI処理を許可しますか？",
+      "required": true,
+      "options": ["local_drafts_only", "limited_consented_access"],
+      "selected": null
+    }
+  ],
+  "planned_views": [
+    {"id": "conversations", "layout": "split", "parts": ["thread_list", "selected_thread", "draft_editor"]},
+    {"id": "overview", "layout": "list", "parts": ["needs_reply", "drafts", "send_unverified", "failures"]},
+    {"id": "device", "layout": "on_demand_surface", "parts": ["connection_status", "original_device_view"]}
+  ],
+  "policy": {
+    "preview_has_external_writes": false,
+    "default_send_mode": "review_each_send",
+    "send_requires_verified_capability": true,
+    "send_requires_target_and_content_check": true,
+    "app_builder_permission_does_not_authorize_send": true,
+    "fake_metrics_disallowed": true,
+    "manual_fallback_when_disallowed": true
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "id": "dev",
+  "name": "Development",
+  "goal_hint": ["開発環境", "repo", "リポジトリ", "開発"],
+  "pages": [
+    {
+      "page": "Dev",
+      "regions": [
+        { "slot": "main", "accepts": ["terminal"], "size": 0.65 },
+        { "slot": "side", "accepts": ["repo"], "size": 0.35 },
+        { "slot": "bottom", "accepts": ["run_receipt"], "size": null }
+      ]
+    },
+    {
+      "page": "Docs",
+      "regions": [
+        { "slot": "main", "accepts": ["mirror", "native_app"], "size": 0.7 },
+        { "slot": "side", "accepts": ["notes"], "size": 0.3 }
+      ]
+    },
+    {
+      "page": "Diagram",
+      "regions": [
+        { "slot": "main", "accepts": ["web"], "size": 0.7 },
+        { "slot": "side", "accepts": ["link"], "size": 0.3 }
+      ]
+    },
+    {
+      "page": "Mirror",
+      "regions": [
+        { "slot": "main", "accepts": ["mirror"], "size": null },
+        { "slot": "top", "accepts": ["status"], "size": null }
+      ]
+    }
+  ]
+}

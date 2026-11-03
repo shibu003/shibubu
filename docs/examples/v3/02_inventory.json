@@ -1,0 +1,186 @@
+{
+  "schema_version": "3.0",
+  "id": "example.v3.inventory",
+  "version": 1,
+  "title": "在庫",
+  "goal": {
+    "literal_goal": "在庫を整理したい",
+    "outcomes": [
+      "商品と数量を一覧で見て、名前で絞れる",
+      "数量をその場で変えられる",
+      "閉じて開き直しても残る",
+      "手元の CSV から読み込める"
+    ],
+    "assumptions": [
+      "在庫は端末内に保存する。CRM・cloud・スマホを既定で繋がない",
+      "CSV は利用者が picker で選んだ file だけ読む"
+    ],
+    "constraints": [
+      "削除は確認の後（DESIGN §4.1 destructive）",
+      "外部接続を要求しない（TEST-002）"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "inventory-root",
+      "component": "column",
+      "children": [
+        {
+          "key": "inventory-search",
+          "component": "form",
+          "label": "絞り込み",
+          "props": { "fields": [ { "name": "query", "label": "商品名で絞る", "input": "text" } ] },
+          "binding": { "source_ref": "local.inventory", "path": "filter" },
+          "action_ref": "local.inventory.filter"
+        },
+        {
+          "key": "inventory-split",
+          "component": "split",
+          "layout": { "ratio": [0.6, 0.4] },
+          "children": [
+            {
+              "key": "inventory-table",
+              "component": "table",
+              "role": "primary",
+              "label": "商品",
+              "props": { "columns": ["name", "quantity", "updated_at"], "numeric_columns": ["quantity"] },
+              "binding": { "source_ref": "local.inventory", "path": "items" },
+              "states": { "empty": "まだ商品がありません。「追加する」か「CSV を読み込む」から始める" }
+            },
+            {
+              "key": "inventory-detail",
+              "component": "column",
+              "role": "context",
+              "visibility": { "when": "has_selection" },
+              "children": [
+                {
+                  "key": "inventory-item-form",
+                  "component": "form",
+                  "label": "選択した商品",
+                  "props": { "fields": [ { "name": "quantity", "label": "数量", "input": "integer" } ] },
+                  "binding": { "source_ref": "local.inventory", "path": "selected" },
+                  "action_ref": "local.inventory.update_quantity"
+                },
+                {
+                  "key": "inventory-delete",
+                  "component": "button",
+                  "label": "削除する",
+                  "props": { "variant": "danger" },
+                  "action_ref": "local.inventory.delete"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "inventory-actions",
+          "component": "row",
+          "children": [
+            {
+              "key": "inventory-add",
+              "component": "button",
+              "label": "追加する",
+              "props": { "variant": "primary" },
+              "action_ref": "local.inventory.add"
+            },
+            {
+              "key": "inventory-import",
+              "component": "button",
+              "label": "CSV を読み込む",
+              "props": { "variant": "secondary" },
+              "action_ref": "local.inventory.import_csv"
+            }
+          ]
+        }
+      ]
+    },
+    "view_modes": ["use", "build", "review"]
+  },
+  "capabilities": [],
+  "actions": [
+    {
+      "id": "local.inventory.filter",
+      "effect": "local_read",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "properties": { "query": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.inventory.add",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": {
+        "type": "object",
+        "required": ["name"],
+        "properties": { "name": { "type": "string", "minLength": 1 }, "quantity": { "type": "integer", "minimum": 0 } },
+        "additionalProperties": false
+      },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.inventory.update_quantity",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": {
+        "type": "object",
+        "required": ["item_id", "quantity"],
+        "properties": { "item_id": { "type": "string" }, "quantity": { "type": "integer", "minimum": 0 } },
+        "additionalProperties": false
+      },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.inventory.delete",
+      "effect": "destructive",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["item_id"], "properties": { "item_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": true
+    },
+    {
+      "id": "local.inventory.import_csv",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": {
+        "type": "object",
+        "required": ["file_ref"],
+        "properties": { "file_ref": { "type": "string", "description": "利用者が picker で選んだ file の参照 id。path は書かない" } },
+        "additionalProperties": false
+      },
+      "output_schema": { "type": "object", "properties": { "imported": { "type": "integer" }, "skipped": { "type": "integer" } } },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    }
+  ],
+  "sources": [
+    { "id": "local.inventory", "kind": "local_collection", "readiness": "local", "scope": "app" }
+  ],
+  "workflows": [],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail",
+    "policy_scope": ["local"]
+  },
+  "state": {
+    "readiness": "ready",
+    "execution_mode": "local_ready",
+    "status_message": "端末内で動く。CSV は選んだ file だけ読む。"
+  },
+  "metadata": {
+    "corpus": {
+      "prompt": "在庫を整理したい",
+      "todo": ["TEST-002", "GEN-004", "GEN-013"],
+      "differs_by": "一覧 + 詳細の split（主役 60%）。local でも destructive（削除）には承認 gate。CSV は利用者が選んだ file だけ",
+      "scene": "records → table（DESIGN §7）。CRM・cloud・スマホを候補にすら出さない"
+    }
+  }
+}

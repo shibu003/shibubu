@@ -1,0 +1,9 @@
+{
+ "code": "type_text_incomplete",
+ "delivered_chars": 0,
+ "effect": "partial",
+ "path": "key_events",
+ "requested_chars": 15,
+ "retry_from_character": 0,
+ "retryable": true
+}

@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kangae.local/goal_plan_v1.schema.json",
+  "title": "Kangae GoalPlan v1 (non-executable Builder draft)",
+  "description": "No source, account, device, domain, UI template or external execution capability is compulsory. Runtime authorization is separate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "prompt",
+    "goal",
+    "requirements",
+    "needs",
+    "source_policy",
+    "candidate_sources",
+    "ui_intents",
+    "questions",
+    "verification_plan"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "objective",
+        "success_signal"
+      ],
+      "properties": {
+        "objective": {
+          "type": "string",
+          "minLength": 2
+        },
+        "success_signal": {
+          "type": "string",
+          "minLength": 2
+        }
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "statement",
+          "origin",
+          "necessity",
+          "confidence"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/id"
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "origin": {
+            "enum": [
+              "explicit",
+              "inferred",
+              "confirmed"
+            ]
+          },
+          "necessity": {
+            "enum": [
+              "essential",
+              "useful",
+              "optional"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "needs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "description",
+          "effect",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/id"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "effect": {
+            "enum": [
+              "pure",
+              "read",
+              "local_write",
+              "external_write",
+              "execute"
+            ]
+          },
+          "status": {
+            "enum": [
+              "proposed",
+              "planned_local",
+              "needs_connection",
+              "needs_permission",
+              "unsupported"
+            ]
+          }
+        }
+      }
+    },
+    "source_policy": {
+      "enum": [
+        "local_only",
+        "optional_connections",
+        "requested_connection"
+      ]
+    },
+    "candidate_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "kind",
+          "evidence"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/id"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "local_core",
+              "api",
+              "mcp",
+              "cua",
+              "mac_gui",
+              "repo",
+              "original_surface",
+              "extension",
+              "device",
+              "manual"
+            ]
+          },
+          "evidence": {
+            "enum": [
+              "user_named",
+              "catalog_candidate",
+              "user_authorized_discovery"
+            ]
+          }
+        }
+      }
+    },
+    "ui_intents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "purpose",
+          "primary"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/id"
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1
+          },
+          "primary": {
+            "type": "boolean"
+          },
+          "representation_hint": {
+            "type": "string",
+            "maxLength": 120
+          }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "text",
+          "blocking_need_id",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/id"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "blocking_need_id": {
+            "$ref": "#/$defs/id"
+          },
+          "reason": {
+            "enum": [
+              "identity",
+              "privacy",
+              "external_effect",
+              "payment",
+              "irreducible_preference"
+            ]
+          },
+          "suggested_default": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "verification_plan": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 2
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,79}$"
+    }
+  }
+}

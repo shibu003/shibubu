@@ -1,0 +1,10 @@
+# 緑のはずの英語の行（UI-1）。kind<TAB>text。check_ui_copy.py --self-test が EN_RULES と一緒に読む（UI-1）
+button	Delete page
+status	Nothing here yet
+status	Not connected
+tooltip	Not checked by Shibubu
+placeholder	Change this project, e.g. add a Tests page
+error	Couldn't tell what to build. Say in one line what you want to track, manage or measure.
+status	Imported octo/repo · src. No code was run
+label	Deletes this part only. The app's data stays
+status	Editing layout · actions are off

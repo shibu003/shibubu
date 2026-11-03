@@ -1,0 +1,11 @@
+{
+  "schema_version": "3.0", "id": "broken.unsupported_component", "version": 1, "title": "描けない component",
+  "goal": {"literal_goal": "研究ノートを作りたい", "outcomes": ["研究ノートを作りたい"]},
+  "composition": {"root": {"key": "research-root", "component": "column", "props": {}, "children": [
+    {"key": "research-3d", "component": "hologram", "props": {}}
+  ]}},
+  "actions": [],
+  "sources": [],
+  "agent": {"suggestions_enabled": true, "autonomy_level": "suggest_only", "entrypoint": "agent_rail"},
+  "state": {"readiness": "preview", "execution_mode": "local_demo"}
+}

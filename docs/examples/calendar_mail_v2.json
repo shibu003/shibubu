@@ -1,0 +1,20 @@
+{
+  "schema_version": "2.0", "id": "calendar-mail-workspace-v2", "name": "Daily Workspace", "purpose": "予定と関連メールを同じ文脈で処理し、必要なときだけAIアシスタントを使う",
+  "sources": [{"id": "calendar", "display_name": "Calendar", "adapter_kind": "api"}, {"id": "gmail", "display_name": "Gmail", "adapter_kind": "api"}, {"id": "assistant", "display_name": "Connected model", "adapter_kind": "api"}],
+  "capabilities": [
+    {"id": "read-events", "source_id": "calendar", "catalog_ref": "calendar.events.list", "effect": "read", "verification": "read_back", "approval": "none"},
+    {"id": "read-mail", "source_id": "gmail", "catalog_ref": "gmail.threads.list", "effect": "read", "verification": "read_back", "approval": "none"},
+    {"id": "assistant-query", "source_id": "assistant", "catalog_ref": "model.chat.respond", "effect": "execute", "verification": "human_review", "approval": "runtime_policy"}
+  ],
+  "entities": [{"id": "events", "identity_key": "event_id", "fields": [{"name": "title", "type": "string"}, {"name": "start", "type": "datetime"}]}, {"id": "threads", "identity_key": "thread_id", "fields": [{"name": "subject", "type": "string"}, {"name": "preview", "type": "string"}]}],
+  "actions": [{"id": "refresh-events", "capability_id": "read-events", "target_entity_id": "events"}, {"id": "refresh-mail", "capability_id": "read-mail", "target_entity_id": "threads"}, {"id": "ask-assistant", "capability_id": "assistant-query"}],
+  "views": [{"id": "today", "label": "今日", "root": {"key": "day-root", "type_id": "layout.stack", "label": "本日の仕事", "children": [
+    {"key": "day-header", "type_id": "ui.toolbar", "label": "日付と操作"},
+    {"key": "day-split", "type_id": "layout.split", "label": "予定とメール", "children": [
+      {"key": "calendar-view", "type_id": "ui.calendar", "label": "予定", "priority": "primary", "data_ref": "events"},
+      {"key": "mail-view", "type_id": "ui.list", "label": "関連メール", "data_ref": "threads"}
+    ]},
+    {"key": "assistant-view", "type_id": "ui.chat", "label": "AIアシスタント", "action_ref": "ask-assistant"}
+  ]}}],
+  "workflows": []
+}

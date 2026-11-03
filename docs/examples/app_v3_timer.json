@@ -1,0 +1,102 @@
+{
+  "schema_version": "3.0",
+  "id": "example.timer",
+  "version": 1,
+  "title": "Focus Timer",
+  "goal": {
+    "literal_goal": "タイマーを作って",
+    "outcomes": [
+      "タイマーを作って"
+    ],
+    "assumptions": [
+      "このプレビューで外部アカウントには接続しない"
+    ],
+    "constraints": [
+      "ユーザーの承認なく外部データにアクセスしない"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "timer-root",
+      "component": "column",
+      "props": {},
+      "children": [
+        {
+          "key": "timer-value",
+          "component": "text",
+          "props": {
+            "style": "timer",
+            "text": "00:00"
+          }
+        },
+        {
+          "key": "timer-controls",
+          "component": "row",
+          "props": {},
+          "children": [
+            {
+              "key": "timer-start",
+              "component": "button",
+              "props": {
+                "label": "開始 / 一時停止"
+              },
+              "action_ref": "local.timer.toggle"
+            },
+            {
+              "key": "timer-reset",
+              "component": "button",
+              "props": {
+                "label": "リセット"
+              },
+              "action_ref": "local.timer.reset"
+            }
+          ]
+        }
+      ]
+    },
+    "view_modes": [
+      "use",
+      "build",
+      "review"
+    ]
+  },
+  "actions": [
+    {
+      "id": "local.timer.toggle",
+      "effect": "local_write",
+      "readiness": "preview_only",
+      "input_schema": {
+        "type": "object"
+      },
+      "required_scopes": [],
+      "requires_approval": false
+    },
+    {
+      "id": "local.timer.reset",
+      "effect": "local_write",
+      "readiness": "preview_only",
+      "input_schema": {
+        "type": "object"
+      },
+      "required_scopes": [],
+      "requires_approval": false
+    }
+  ],
+  "sources": [
+    {
+      "id": "local.timer",
+      "kind": "local_state",
+      "readiness": "local"
+    }
+  ],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail"
+  },
+  "state": {
+    "readiness": "preview",
+    "execution_mode": "local_demo",
+    "status_message": "設計サンプル。実データは接続しない。"
+  }
+}

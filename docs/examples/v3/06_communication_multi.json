@@ -1,0 +1,180 @@
+{
+  "schema_version": "3.0",
+  "id": "example.v3.communication_multi",
+  "version": 1,
+  "title": "まとめて読む",
+  "goal": {
+    "literal_goal": "複数サービスのチャットをまとめたい",
+    "outcomes": [
+      "繋いだアカウントの thread が 1 つの一覧に、出所の badge つきで並ぶ",
+      "返信の下書きは端末内に残り、送るのは宛先と本文を確認した後",
+      "どのアカウントを繋ぐかは、必要になった時に 1 回だけ聞く（TEST-005）"
+    ],
+    "assumptions": [
+      "アカウントは未選択。候補の一覧は registry（Connections）が出す。中身は繋ぐまで読まない",
+      "繋いでいないサービスを「読める」扱いにしない"
+    ],
+    "constraints": [
+      "同名の人を別サービス間で勝手に同一視しない（CTX-002）",
+      "一括送信・自動返信をしない（AGT-009）"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "comm-root",
+      "component": "column",
+      "children": [
+        {
+          "key": "comm-hint",
+          "component": "text",
+          "props": { "style": "helper", "text": "まとめるアカウントを選ぶと一覧が出る。選ぶまで何も読まない。" }
+        },
+        {
+          "key": "comm-candidates",
+          "component": "list",
+          "label": "繋げる候補",
+          "binding": { "source_ref": "local.connection_candidates", "path": "items" },
+          "states": { "empty": "候補が見つからない。Connections から追加する" }
+        },
+        {
+          "key": "comm-connect",
+          "component": "button",
+          "label": "アカウントを繋ぐ",
+          "props": { "variant": "secondary" },
+          "action_ref": "local.connection.open"
+        },
+        {
+          "key": "comm-split",
+          "component": "split",
+          "layout": { "ratio": [0.4, 0.6] },
+          "children": [
+            {
+              "key": "comm-threads",
+              "component": "list",
+              "label": "thread",
+              "props": { "show_source_badge": true },
+              "binding": { "source_ref": "optional.accounts", "path": "threads" },
+              "states": {
+                "requires_connection": "アカウントを繋ぐと thread が並ぶ（読み取りのみ）",
+                "empty": "thread はまだありません"
+              }
+            },
+            {
+              "key": "comm-thread",
+              "component": "column",
+              "role": "primary",
+              "children": [
+                {
+                  "key": "comm-messages",
+                  "component": "chat",
+                  "label": "会話",
+                  "props": { "show_source_badge": true },
+                  "binding": { "source_ref": "optional.accounts", "path": "selected.messages" },
+                  "states": {
+                    "requires_connection": "アカウントを繋ぐと会話が出る",
+                    "empty": "thread を選ぶと会話が出る"
+                  }
+                },
+                {
+                  "key": "comm-reply",
+                  "component": "form",
+                  "label": "返信の下書き",
+                  "props": { "fields": [ { "name": "body", "label": "本文", "input": "multiline" } ] },
+                  "binding": { "source_ref": "local.drafts", "path": "selected" },
+                  "action_ref": "local.drafts.save"
+                },
+                {
+                  "key": "comm-send",
+                  "component": "button",
+                  "label": "確認して送る",
+                  "props": { "variant": "primary" },
+                  "action_ref": "messages.send",
+                  "states": { "disabled": "アカウントを繋ぎ、宛先と本文を確認してから送れる。1 通ずつ承認" }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "view_modes": ["use", "build", "inspect", "run", "review"]
+  },
+  "capabilities": [
+    { "id": "messages.read", "provider": null, "readiness": "discoverable", "required_scopes": ["messages.read"], "adapter": "api" },
+    { "id": "messages.send", "provider": null, "readiness": "discoverable", "required_scopes": ["messages.send"], "adapter": "api" }
+  ],
+  "actions": [
+    {
+      "id": "local.connection.open",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "properties": { "capability_ref": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "messages.read",
+      "capability_ref": "messages.read",
+      "effect": "external_read",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["account_id"], "properties": { "account_id": { "type": "string" }, "since": { "type": "string" } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "threads": { "type": "array" }, "observed_at": { "type": "string" } } },
+      "required_scopes": ["messages.read"],
+      "verifier": "read_back",
+      "requires_approval": false
+    },
+    {
+      "id": "local.drafts.save",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["thread_id", "body"], "properties": { "thread_id": { "type": "string" }, "body": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "messages.send",
+      "capability_ref": "messages.send",
+      "effect": "external_send",
+      "readiness": "requires_connection",
+      "input_schema": {
+        "type": "object",
+        "required": ["account_id", "thread_id", "draft_id"],
+        "properties": { "account_id": { "type": "string" }, "thread_id": { "type": "string" }, "draft_id": { "type": "string" } },
+        "additionalProperties": false
+      },
+      "output_schema": { "type": "object", "properties": { "status": { "enum": ["sent_confirmed", "failed", "outcome_unknown"] } } },
+      "required_scopes": ["messages.send"],
+      "verifier": "source_receipt",
+      "requires_approval": true
+    }
+  ],
+  "sources": [
+    { "id": "local.connection_candidates", "kind": "local_state", "readiness": "local", "scope": "registry" },
+    { "id": "optional.accounts", "kind": "external_optional", "readiness": "requires_connection", "provider": null, "last_observed_at": null },
+    { "id": "local.drafts", "kind": "local_collection", "readiness": "local", "scope": "app" }
+  ],
+  "workflows": [
+    { "id": "reply_with_review", "action_refs": ["local.drafts.save", "messages.send"], "approval": "exact_payload" }
+  ],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail",
+    "policy_scope": ["local.drafts", "messages.send:approval_required_per_message"]
+  },
+  "state": {
+    "readiness": "partial",
+    "execution_mode": "local_ready",
+    "status_message": "繋ぐアカウントを選ぶまで一覧は空。下書きは端末内に保存できる。"
+  },
+  "metadata": {
+    "corpus": {
+      "prompt": "複数サービスのチャットをまとめたい",
+      "todo": ["TEST-005", "GEN-013", "CON-011", "LEG-007"],
+      "differs_by": "接続先が provider null のまま（候補のまま）。送信は external_send + requires_approval で、状態に outcome_unknown を持つ",
+      "scene": "DESIGN §12.2「メッセージをまとめて」。候補は出すが、アカウントも private data も仮定しない"
+    }
+  }
+}

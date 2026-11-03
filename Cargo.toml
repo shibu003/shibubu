@@ -1,0 +1,78 @@
+[package]
+name = "shibubu"
+version = "0.5.0"
+edition = "2021"
+default-run = "shibubu"
+description = "Type one sentence. Shibubu opens your Mac apps in one window, and AI changes nothing without your OK."
+license = "Apache-2.0"
+
+[dependencies]
+# G89: 描画は wgpu（Metal）。glow（OpenGL）は外す = 10-27 の GPU 再起動 2 回はどちらも main thread の -[NSOpenGLContext flushBuffer]（Intel の GL driver）で待っていた。
+# 残す feature = accesskit（AX の木）・default_fonts。persistence は使わない・wayland / x11 は macOS に要らない。egui-wgpu 0.31.1 / wgpu 24.0.5 は Cargo.lock に既に在る
+eframe = { version = "0.31", default-features = false, features = ["accesskit", "default_fonts", "wgpu"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["float_roundtrip"] } # 記録の小数の ms を書いた値のまま読み戻す（W16M-1b）
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+ureq = { version = "2.12", features = ["json", "tls"] }
+cpal = "=0.18.2"
+hound = "=3.5.1"
+# WebView の面（v0.14 §3.1・CD-24）。feature webview の時だけ（既定の build には WebKit の crate を入れない）。
+# 0.57.0 = crates.io の最新（2026-09-08・rust 1.85・Apache-2.0 OR MIT・https://crates.io/crates/wry/0.57.0）
+wry = { version = "=0.57.0", optional = true }
+
+# W4: Project の Terminal の本物の PTY（src/terminal）。owner 4 通目で承認・0.9.0 = crates.io の最新（2025-02-11・MIT・docs/evidence/W4/deps.md）
+portable-pty = "=0.9.0"
+
+# W10: Terminal の画面の状態（src/terminal/vt.rs）。owner 4 通目で承認・vt100 と 4 観点で比べて選んだ（docs/evidence/W10/vt.md）。
+# 0.26.0 = crates.io の最新（2026-04-06・Apache-2.0・rust 1.85・docs/evidence/W10/deps.md）。serde は使わない
+alacritty_terminal = { version = "=0.26.0", default-features = false }
+# W10: grid の全角の幅（src/ui/renderer）。alacritty_terminal の推移的依存と同じ版を直接名指すだけ（Cargo.lock に crate は増えない）
+unicode-width = "0.2"
+# HOME-ATTACH-1101: Home の添付の写真の縮小絵（PNG・JPEG を decode）と、試験の写真（docs/evidence の PNG を書く）。arboard が既に使う 0.25.10（Cargo.lock）を名指して
+# png と jpeg の feature だけ（png・zune-jpeg・zune-core も Cargo.lock に在る = crate は増えない）。GIF・WebP の写真は縮小絵でなく種類の印
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+# HOME-ATTACH-1101: ⌘V で Finder の file を貼った時の file の一覧（`Get::file_list`）。egui-winit が既に使う 3.7.0（Cargo.lock）を名指すだけ
+arboard = { version = "3.7", default-features = false }
+# CHAT-FREE-1101（owner 198 通目の 6）: chat の答えの Markdown を読む（src/ui/markdown.rs・描くのは egui）。parse だけ = default の html・getopts を切る。
+# 0.13.4 = 2026-05-20・MIT・rust 1.71。増える crate は unicase だけ（bitflags 2・memchr は Cargo.lock に在る）
+pulldown-cmark = { version = "=0.13.4", default-features = false }
+
+# ICONS-1101（owner 227・230・231: 既製の無料の icon の集まり・Tailwind は無し）: 製品の icon は Phosphor の Bold だけ（src/ui/theme.rs `icon_glyph`）。
+# 0.9.0 = 2024-12-17・MIT OR Apache-2.0（中の Phosphor Icons の font も MIT）・egui ^0.31 = 今の eframe 0.31 の egui 0.31.1。増える crate は 1 つ（依存は egui だけ）
+egui-phosphor = { version = "=0.9.0", default-features = false, features = ["bold"] }
+
+# W2b: 起動で前面を取らない（src/main.rs launch_without_stealing_front）。eframe が既に使う 0.30.13（Cargo.lock）を直接名指すだけ
+[target.'cfg(target_os = "macos")'.dependencies]
+winit = "0.30"
+# MIRROR-SPEED-1101: Mirror の IOSurface を写さずに Metal の texture にする（`ui::mirror_view::metal_texture`・wgpu の `texture_from_raw` が取る型）。
+# wgpu-hal が既に使う 0.31.0（Cargo.lock）を名指すだけ（crate は増えない・版が違うと型が合わない）・feature mirror の時だけ
+metal = { version = "0.31", optional = true }
+
+[features]
+webview = ["dep:wry"]
+# W16-1: TextEdit を Page の枠に重ねる（src/project/native.rs）。依存は足さない。owner 23・24 通目（10-23「Mirror」）で撤回が確定: release に入れない・既定にしない・code は統合の後の整理の段で消す（枠の中は feature mirror の 1 本）
+native_direct = []
+# Interactive Mirror の口と同意（src/surface/mirror.rs・YC W16M-0）。W15 の .app では切る・W16M の受け入れの記録までは既定にしない。
+# crate は増やさない（MIRROR-SPEED-1101 の metal は wgpu-hal の物を名指すだけ）
+mirror = ["dep:metal"]
+
+# G96: Layout を替える試験が、eframe 0.31 の AX の木（accesskit_consumer）を直に読む。[patch.crates-io] の写しと同じ物
+[dev-dependencies]
+accesskit_consumer = "0.26"
+# HOME-ATTACH-1101: 試験の写真（Home を wgpu で画面の外に描いて PNG に）の adapter と device を待つ。eframe（wgpu）が既に使う 0.4.0（Cargo.lock）を名指すだけ
+pollster = "0.4"
+
+# G96: eframe 0.31（accesskit 0.17）が使う accesskit_consumer 0.26.0 は、親を移った node を孤児として消して panic する（tree.rs:306・上流 #576 で 0.29.0 から直った）。
+# 0.29 は accesskit 0.19 が要り eframe 0.31 では上げられないので、上流の直しだけを写した 0.26.0（vendor/accesskit_consumer/PATCHED.md）。eframe を上げたら行ごと消す
+[patch.crates-io]
+accesskit_consumer = { path = "vendor/accesskit_consumer" }
+
+# Live Mirror の PoC と measure（W16M-0 の口を使うので feature mirror の時だけ）
+[[bin]]
+name = "kangae-mirror"
+path = "src/bin/kangae-mirror.rs"
+required-features = ["mirror"]
+
+[profile.release]
+strip = true
+lto = "thin"

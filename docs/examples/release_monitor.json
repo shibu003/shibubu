@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "id": "release-verification",
+  "name": "リリース確認",
+  "purpose": "リポジトリ確認とIDEテストの実行をステップ単位で監視する",
+  "sources": [
+    {"id": "repo-main", "name": "GitHub", "kind": "api"},
+    {"id": "ide-main", "name": "IDE", "kind": "cua"}
+  ],
+  "capabilities": [
+    {"id": "read-prs", "source_id": "repo-main", "name": "PRの状態を取得", "kind": "read", "requires_confirmation": false, "verify_as": "read_back"},
+    {"id": "run-tests", "source_id": "ide-main", "name": "テストを実行", "kind": "execute", "requires_confirmation": true, "verify_as": "state_compare"}
+  ],
+  "datasets": [
+    {"id": "prs", "produced_by": "read-prs", "record_key": "pr_id"},
+    {"id": "test-results", "produced_by": "run-tests", "record_key": "run_id"}
+  ],
+  "view": {
+    "pattern": "monitor",
+    "regions": [
+      {"key": "monitor-toolbar", "role": "toolbar", "components": [
+        {"key": "launch-workflow", "kind": "workflow_launcher", "label": "一連の処理を実行", "importance": "primary", "workflow_id": "check-release"}
+      ]},
+      {"key": "run-main", "role": "primary", "components": [
+        {"key": "progress-list", "kind": "run_progress", "label": "実行ステップ", "importance": "primary"},
+        {"key": "tests-result", "kind": "detail", "label": "テスト結果", "importance": "secondary", "dataset_id": "test-results", "visible_in": ["completed", "unverified", "failed"]}
+      ]},
+      {"key": "run-context", "role": "context", "components": [
+        {"key": "pr-overview", "kind": "list", "label": "対象PR", "importance": "secondary", "dataset_id": "prs"}
+      ]}
+    ]
+  },
+  "workflows": [
+    {"id": "check-release", "name": "リリース前の確認", "steps": [
+      {"id": "collect-pr", "capability_id": "read-prs", "after": []},
+      {"id": "verify-tests", "capability_id": "run-tests", "after": ["collect-pr"]}
+    ]}
+  ]
+}

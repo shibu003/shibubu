@@ -1,0 +1,8 @@
+# name<TAB>cwd<TAB>command（$HOME だけ展開・command 空か # 始まりは skip）。静かな窓で operator が打つ: bash scripts/qa/bg/quiet-window.sh scripts/qa/bg/quiet-window-plan.tsv
+# 表はこの 1 つ（tracked）。.app は yc-mirror の release（窓の時に最新へ差し替える: bash scripts/qa/integ-ui.sh rows <app>）。rehearse 1 を先頭・scene2 は M4 まで # のまま
+rehearse1	$HOME/kangae-rust-mvp-wt/yc-trunk	bash scripts/qa/bg/rehearse.sh 1 $HOME/kangae-rust-mvp-wt/yc-mirror/target/release/bundle/Shibubu.app
+w15-run3	$HOME/kangae-rust-mvp-wt/yc-trunk	bash docs/evidence/W15/run3.sh $HOME/kangae-rust-mvp-wt/yc-mirror/target/release/bundle/Shibubu.app
+gfinal	$HOME/kangae-rust-mvp-wt/yc-trunk	bash scripts/qa/bg/gfinal-bg.sh $HOME/kangae-rust-mvp-wt/yc-mirror/target/release/bundle/Shibubu.app
+w12w1c-a	$HOME/kangae-rust-mvp-wt/yc-trunk	R=$(mktemp -d "$HOME/shibubu-yc-runs/w12w1c-low.XXXX") && python3 -I scripts/qa/bg/drive-w12w1c.py normal_low "$R" $HOME/kangae-rust-mvp-wt/yc-mirror/target/release/bundle/Shibubu.app; rc=$?; echo "out=$R"; exit $rc
+w12w1c-b	$HOME/kangae-rust-mvp-wt/yc-trunk	R=$(mktemp -d "$HOME/shibubu-yc-runs/w12w1c-load.XXXX") && python3 -I scripts/qa/bg/drive-w12w1c.py normal_load "$R" $HOME/kangae-rust-mvp-wt/yc-mirror/target/release/bundle/Shibubu.app; rc=$?; echo "out=$R"; exit $rc
+scene2	$HOME/kangae-rust-mvp-wt/yc-trunk	# M4 の後に # を取る: bash scripts/qa/bg/rehearse.sh scene2 $HOME/kangae-rust-mvp-wt/yc-mirror/target/release/bundle/Shibubu.app

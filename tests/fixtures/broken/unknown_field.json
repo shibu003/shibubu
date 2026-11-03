@@ -1,0 +1,10 @@
+{
+  "schema_version": "3.0", "id": "broken.unknown_field", "version": 1, "title": "schema に無い field",
+  "intent": "研究ノートを作りたい",
+  "goal": {"literal_goal": "研究ノートを作りたい", "outcomes": ["研究ノートを作りたい"]},
+  "composition": {"root": {"key": "research-root", "component": "column", "props": {}}},
+  "actions": [],
+  "sources": [],
+  "agent": {"suggestions_enabled": true, "autonomy_level": "suggest_only", "entrypoint": "agent_rail"},
+  "state": {"readiness": "preview", "execution_mode": "local_demo"}
+}

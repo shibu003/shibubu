@@ -1,0 +1,177 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-08-ui-patch-undo",
+  "title": "UI の差分 patch → 手で直した所を保ち、Undo で patch だけ戻る",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12 UI差分Patch→ユーザー修正とUndoを保持",
+    "DESIGN.md §12.2 このアプリに検索を追加（local versioned diff, preserves existing rows/user edits）・§5.4・§6.3 Cmd/Ctrl+Z・§9 Cmd/Ctrl+K",
+    "KANGAE_MASTER_SPEC.md §2.3 アプリの差分更新・§15 UC-07"
+  ],
+  "scene": "qa-02 と同じ店の人。在庫の CSV を読み込んで 1 か所直した後、検索を足したくなった",
+  "first_words": "在庫管理",
+  "out_of_scope": "patch の衝突（構成が更新されています）・外部への副作用のある提案",
+  "fixtures": { "inventory.csv": "品名,数量,置き場所\nりんご,12,棚A\nみかん,30,棚B\n" },
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": { "present": [{ "text": "まだデータがありません", "match": "contains" }] },
+      "evidence": "02-empty.png"
+    },
+    {
+      "id": "s3",
+      "intent": "CSV の読み込みを押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "読み込", "match": "contains" },
+      "in": "dialog",
+      "expect": { "present": [{ "role": "AXButton", "text": "^(開く|Open)$", "match": "regex" }] },
+      "evidence": "03-open-panel.png"
+    },
+    {
+      "id": "s4",
+      "intent": "Cmd+Shift+G で場所を打つ欄を出す",
+      "do": "key",
+      "keys": ["cmd", "shift", "g"],
+      "in": "dialog",
+      "expect": { "present": [{ "role": "AXButton", "text": "^(開く|Open)$", "match": "regex" }] },
+      "evidence": "04-goto.png"
+    },
+    {
+      "id": "s5",
+      "intent": "CSV の場所を打つ",
+      "do": "type_focused",
+      "text": "${FIXTURES}/inventory.csv",
+      "in": "dialog",
+      "expect": { "present": [{ "value": "inventory.csv", "match": "contains" }] },
+      "evidence": "05-path.png"
+    },
+    {
+      "id": "s6",
+      "intent": "Return でその場所へ移る",
+      "do": "key",
+      "keys": ["return"],
+      "in": "dialog",
+      "settle_s": 1,
+      "expect": { "present": [{ "text": "inventory.csv", "match": "contains" }] },
+      "evidence": "06-selected.png"
+    },
+    {
+      "id": "s7",
+      "intent": "Return で開く",
+      "do": "key",
+      "keys": ["return"],
+      "in": "dialog",
+      "settle_s": 1,
+      "timeout_s": 30,
+      "expect": { "present": [{ "text": "りんご", "match": "contains" }, { "text": "みかん", "match": "contains" }] },
+      "evidence": "07-loaded.png"
+    },
+    {
+      "id": "s8",
+      "intent": "りんごの数量 12 を押す",
+      "do": "click",
+      "target": { "text": "12" },
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea"], "value": "12" }] },
+      "evidence": "08-editing.png"
+    },
+    {
+      "id": "s9",
+      "intent": "Cmd+A で全部選ぶ",
+      "do": "key",
+      "keys": ["cmd", "a"],
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea"], "value": "12" }] },
+      "evidence": "09-selected.png"
+    },
+    {
+      "id": "s10",
+      "intent": "15 と手で直す",
+      "do": "type_focused",
+      "text": "15",
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea"], "value": "15" }], "absent": [{ "text": "12" }] },
+      "evidence": "10-edited.png"
+    },
+    {
+      "id": "s11",
+      "intent": "Cmd+K で command を開く",
+      "do": "key",
+      "keys": ["cmd", "k"],
+      "expect": { "present": [{ "text": "15" }] },
+      "evidence": "11-command.png",
+      "note": "command 欄に focus が来た事は s12 で見る"
+    },
+    {
+      "id": "s12",
+      "intent": "「このアプリに検索を追加」と打つ",
+      "do": "type_focused",
+      "text": "このアプリに検索を追加",
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea", "AXComboBox"], "value": "このアプリに検索を追加" }] },
+      "evidence": "12-asked.png"
+    },
+    {
+      "id": "s13",
+      "intent": "Return で頼む",
+      "do": "key",
+      "keys": ["return"],
+      "timeout_s": 90,
+      "expect": {
+        "present": [
+          { "role": "AXButton", "text": "プレビュー|適用", "match": "regex" },
+          { "text": "15" },
+          { "text": "りんご", "match": "contains" }
+        ]
+      },
+      "evidence": "13-proposed.png",
+      "note": "prompt での変更は差分として出る（DESIGN §6.3）。勝手に組み替えない"
+    },
+    {
+      "id": "s14",
+      "intent": "プレビューを押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "プレビュー", "match": "contains" },
+      "expect": {
+        "present": [{ "role": "AXButton", "label": "適用", "match": "contains" }],
+        "review": ["変更前と変更後の差分が 1 つの面に出て、新しい app session にはなっていない（DESIGN §5.4）"]
+      },
+      "evidence": "14-preview.png"
+    },
+    {
+      "id": "s15",
+      "intent": "適用を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "適用", "match": "contains" },
+      "expect": {
+        "present": [
+          { "role": ["AXTextField", "AXComboBox", "AXTextArea"], "label": "検索", "match": "contains" },
+          { "text": "15" },
+          { "text": "りんご", "match": "contains" }
+        ],
+        "review": ["表の上に検索欄が増え、行と手で直した 15 はそのまま（DESIGN §12.2）"]
+      },
+      "evidence": "15-applied.png"
+    },
+    {
+      "id": "s16",
+      "intent": "Cmd+Z で戻す",
+      "do": "key",
+      "keys": ["cmd", "z"],
+      "settle_s": 1,
+      "expect": {
+        "present": [{ "text": "15" }, { "text": "りんご", "match": "contains" }],
+        "review": ["検索欄が消え、手で直した 15 は残っている（Undo は patch だけを戻す・DESIGN §5.4・§6.3）"]
+      },
+      "evidence": "16-undone.png"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "id": "phone_bridge",
+  "prompt": "スマホのアプリをMacで使いたい",
+  "goal": {
+    "objective": "指定したスマホアプリをMacから利用できるようにする",
+    "success_signal": "対象機能が実際に操作できる経路を特定する"
+  },
+  "requirements": [
+    {
+      "id": "phone",
+      "statement": "スマホとMacを対象にする",
+      "origin": "explicit",
+      "necessity": "essential",
+      "confidence": 1
+    },
+    {
+      "id": "target_app",
+      "statement": "スマホアプリは未特定",
+      "origin": "inferred",
+      "necessity": "essential",
+      "confidence": 0.95
+    }
+  ],
+  "needs": [
+    {
+      "id": "identify",
+      "description": "対象OS/アプリと操作範囲を特定",
+      "effect": "pure",
+      "status": "proposed"
+    },
+    {
+      "id": "bridge",
+      "description": "適切な端末/アプリ接続手段を検証",
+      "effect": "read",
+      "status": "needs_connection"
+    }
+  ],
+  "source_policy": "requested_connection",
+  "candidate_sources": [],
+  "ui_intents": [
+    {
+      "id": "bridge_plan",
+      "purpose": "利用できる操作方式と対象確認",
+      "primary": true,
+      "representation_hint": "settings-workspace"
+    }
+  ],
+  "questions": [
+    {
+      "id": "target",
+      "text": "どのスマホ（OS）とアプリをMacで使いたいですか？",
+      "blocking_need_id": "bridge",
+      "reason": "identity",
+      "suggested_default": "端末の接続方法だけ先に比較する"
+    }
+  ],
+  "verification_plan": [
+    "Androidを暗黙選択しない",
+    "ミラーリングが会話APIへのアクセスを保証しない"
+  ]
+}

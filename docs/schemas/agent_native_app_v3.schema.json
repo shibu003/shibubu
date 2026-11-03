@@ -1,0 +1,396 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kangae Agent-native App Definition v3 (design contract; not implemented in Rust)",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "goal",
+    "composition",
+    "actions",
+    "sources",
+    "agent",
+    "state"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "3.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "goal": {
+      "type": "object",
+      "required": [
+        "literal_goal",
+        "outcomes"
+      ],
+      "properties": {
+        "literal_goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcomes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "composition": {
+      "type": "object",
+      "required": [
+        "root"
+      ],
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/uiNode"
+        },
+        "view_modes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "use",
+              "build",
+              "inspect",
+              "run",
+              "review"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "readiness"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "readiness": {
+            "enum": [
+              "unknown",
+              "discoverable",
+              "requires_connection",
+              "connected_unverified",
+              "ready",
+              "degraded",
+              "unsupported",
+              "revoked",
+              "simulated_in_preview"
+            ]
+          },
+          "required_scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "adapter": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "effect",
+          "readiness",
+          "input_schema",
+          "required_scopes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "capability_ref": {
+            "type": "string"
+          },
+          "effect": {
+            "enum": [
+              "local_read",
+              "local_write",
+              "external_read",
+              "external_write",
+              "external_send",
+              "destructive"
+            ]
+          },
+          "readiness": {
+            "enum": [
+              "ready",
+              "preview_only",
+              "requires_connection",
+              "unsupported"
+            ]
+          },
+          "input_schema": {
+            "type": "object"
+          },
+          "output_schema": {
+            "type": "object"
+          },
+          "required_scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "verifier": {
+            "type": "string"
+          },
+          "requires_approval": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "readiness"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string"
+          },
+          "readiness": {
+            "enum": [
+              "local",
+              "requires_connection",
+              "connected_unverified",
+              "ready",
+              "degraded",
+              "unsupported"
+            ]
+          },
+          "scope": {
+            "type": "string"
+          },
+          "last_observed_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provider": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "workflows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "action_refs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "action_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "approval": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "agent": {
+      "type": "object",
+      "required": [
+        "suggestions_enabled",
+        "autonomy_level",
+        "entrypoint"
+      ],
+      "properties": {
+        "suggestions_enabled": {
+          "type": "boolean"
+        },
+        "autonomy_level": {
+          "enum": [
+            "suggest_only",
+            "auto_local_reversible",
+            "ask_before_external_effects"
+          ]
+        },
+        "entrypoint": {
+          "type": "string"
+        },
+        "policy_scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "required": [
+        "readiness",
+        "execution_mode"
+      ],
+      "properties": {
+        "readiness": {
+          "enum": [
+            "preview",
+            "partial",
+            "ready",
+            "blocked",
+            "error"
+          ]
+        },
+        "execution_mode": {
+          "enum": [
+            "local_demo",
+            "local_ready",
+            "integrated",
+            "disabled"
+          ]
+        },
+        "status_message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "uiNode": {
+      "type": "object",
+      "required": [
+        "key",
+        "component"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "component": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "props": {
+          "type": "object"
+        },
+        "layout": {
+          "type": "object"
+        },
+        "binding": {
+          "type": "object",
+          "properties": {
+            "source_ref": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_ref",
+            "path"
+          ]
+        },
+        "action_ref": {
+          "type": "string"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/uiNode"
+          }
+        },
+        "states": {
+          "type": "object"
+        },
+        "user_locked": {
+          "type": "boolean"
+        },
+        "visibility": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "id": "meeting-prep",
+  "name": "会議の準備",
+  "purpose": "予定の時間軸を確認し、選択した予定に関係するメールと返信下書きを扱う",
+  "sources": [
+    {"id": "calendar", "name": "Calendar", "kind": "api"},
+    {"id": "mail", "name": "Mail", "kind": "cua"}
+  ],
+  "capabilities": [
+    {"id": "get-events", "source_id": "calendar", "name": "予定を読む", "kind": "read", "requires_confirmation": false, "verify_as": "read_back"},
+    {"id": "get-mail", "source_id": "mail", "name": "関連するメールを読む", "kind": "read", "requires_confirmation": false, "verify_as": "read_back"},
+    {"id": "mail-draft", "source_id": "mail", "name": "メールの下書きを作成", "kind": "write", "requires_confirmation": true, "verify_as": "read_back"}
+  ],
+  "datasets": [
+    {"id": "events", "produced_by": "get-events", "record_key": "event_id"},
+    {"id": "related-mail", "produced_by": "get-mail", "record_key": "message_id"}
+  ],
+  "view": {
+    "pattern": "timeline",
+    "regions": [
+      {"key": "calendar-main", "role": "primary", "components": [
+        {"key": "calendar-view", "kind": "calendar", "label": "今週の予定", "importance": "primary", "dataset_id": "events"}
+      ]},
+      {"key": "meeting-context", "role": "context", "components": [
+        {"key": "meeting-details", "kind": "detail", "label": "選択した予定", "importance": "primary", "dataset_id": "events", "visible_in": ["selected", "editing", "completed"]},
+        {"key": "mail-list", "kind": "list", "label": "関連メール", "importance": "secondary", "dataset_id": "related-mail", "visible_in": ["selected", "completed"]},
+        {"key": "make-draft", "kind": "button", "label": "返信下書きを作る", "importance": "primary", "action_id": "mail-draft", "visible_in": ["selected", "completed"]}
+      ]}
+    ]
+  },
+  "workflows": []
+}

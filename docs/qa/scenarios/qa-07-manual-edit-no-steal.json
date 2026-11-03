@@ -1,0 +1,78 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-07-manual-edit-no-steal",
+  "title": "手で打っている間に Agent の仕事が終わっても、入力と focus を奪わない",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12 手動編集中にAgent介入→入力を奪わない",
+    "KANGAE_MASTER_SPEC.md §15 UC-05・§10 再生成によるフォーカス移動禁止",
+    "DESIGN.md §5.4 No automatic reordering while the user types・§12.3 While typing … do not move focused components・§1.2 Switching apps preserves … running Agent tasks・§9 Cmd/Ctrl+N"
+  ],
+  "scene": "1 つ目の app を頼んだ直後に、もう次に作りたい物を打ち始める人",
+  "first_words": "在庫管理",
+  "out_of_scope": "drag 中・録音中の割り込み（DESIGN §14.3）。元 app の窓の上での手動操作",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す（Agent が裏で組み立て始める）",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 30,
+      "expect": { "absent": [{ "text": "何を作りたいですか？", "match": "contains" }] },
+      "evidence": "02-building.png",
+      "note": "DESIGN §6.1 押すと Build の live preview に移る"
+    },
+    {
+      "id": "s3",
+      "intent": "すぐ Cmd+N で次の app の入力に移る",
+      "do": "key",
+      "keys": ["cmd", "n"],
+      "expect": { "present": [{ "text": "何を作りたいですか？", "match": "contains" }] },
+      "evidence": "03-new.png"
+    },
+    {
+      "id": "s4",
+      "intent": "「研究資料を」まで打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "研究資料を",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "研究資料を" }] },
+      "evidence": "04-half.png"
+    },
+    {
+      "id": "s5",
+      "intent": "手を止めて 20 秒待つ（その間に 1 つ目の app が出来上がる）",
+      "do": "observe",
+      "settle_s": 20,
+      "expect": {
+        "present": [
+          { "text": "何を作りたいですか？", "match": "contains" },
+          { "role": ["AXTextArea", "AXTextField"], "value": "研究資料を" }
+        ],
+        "compare": [{ "of": { "role": ["AXTextArea", "AXTextField"], "value": "研究資料を", "match": "contains" }, "since": "s4", "attr": "frame", "same": true }]
+      },
+      "evidence": "05-waited.png",
+      "note": "勝手に 1 つ目の app の画面へ切り替えない・入力欄を動かさない・中身を消さない"
+    },
+    {
+      "id": "s6",
+      "intent": "続きの「整理」を、今 focus の在る所へ打つ",
+      "do": "type_focused",
+      "text": "整理",
+      "expect": {
+        "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "研究資料を整理" }],
+        "compare": [{ "of": { "role": ["AXTextArea", "AXTextField"], "value": "研究資料を", "match": "contains" }, "since": "s4", "attr": "frame", "same": true }]
+      },
+      "evidence": "06-continued.png",
+      "note": "focus が奪われていれば「整理」は別の所に入り、ここが FAIL になる"
+    }
+  ]
+}

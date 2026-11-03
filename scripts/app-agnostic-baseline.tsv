@@ -1,0 +1,21 @@
+branch	src/app.rs	github	5	violation	GitHub は Connections の service の adapter・app 名ではない（FX5 / RQ4 の GitHub の行・token・読み戻しで 1 → 5・10-31 operator）。旧 CompatCanvas の GitHub の URL の 1 件は従来どおり Adapter へ移すか旧 canvas ごと整理
+branch	src/composer/project.rs	excalidraw	1	violation	同上
+branch	src/composer/project.rs	textedit	1	violation	一言を固定の app の表で読む（主デモ）→ Software Intelligence の Identity の照合と Registry に替える（W19-2）
+branch	src/media/youtube.rs	youtube	1	violation	media/youtube.rs の module ごと（下の module の行）
+branch	src/surface/mod.rs	google	2	legit	権限・安全の判定: sign-in / OAuth の頁を本人の browser へ渡す host の表（is_sign_in・CD-25 (6)）。data に移すのは任意
+branch	src/surface/mod.rs	youtube	2	violation	YouTube の埋め込み専用の判定（Error 153・題が「YouTube」のまま）が Core の WebView の状態機械に在る → Web の Adapter / site profile へ
+direct	src/app.rs	mac_gui	2	violation	UI-2b の状態の 1 行（activity_line・focus_taken_count が adapters::mac_gui を名指し）・NORAIL の後に generic の口へ（L1 の仕事・10-31 operator）
+direct	src/capability_engine/deep_analysis.rs	approval_gap	1	legit	権限の判定: 受け渡した値を外の service へ渡す手（承認の要らない読む action）の承認を、registry の gate と同じ規則（exact payload・app / run・scope）で見る（W19-2b・19 通目 §3 の 7・§4）。Adapter の中身は呼ばない（R-core で capability_engine.rs を割った・解析の action の承認の照合）
+direct	src/capability_engine/workflow.rs	approval_gap	1	legit	権限の判定: 受け渡した値を外の service へ渡す手（承認の要らない読む action）の承認を、registry の gate と同じ規則（exact payload・app / run・scope）で見る（W19-2b・19 通目 §3 の 7・§4）。Adapter の中身は呼ばない（R-core で capability_engine.rs を割った）
+module	src/audio/reaper.rs	reaper	1	violation	REAPER の insert / undo（kangae-rec・kangae-surface の PoC から）→ REAPER の Adapter（ReaScript）へ移す候補（W19-2 の見本）
+module	src/github.rs	github	1	violation	GitHub の業務処理（旧 app.rs から）。src/adapters/github.rs と重なる → Adapter へ寄せる
+module	src/google/calendar.rs	google	1	violation	Google の各 service（oauth・gmail・contacts・calendar・outreach）の業務処理 → src/adapters/google の下へ移す（src/adapters/google.rs が既に在る）
+module	src/google/contacts.rs	google	1	violation	Google の各 service（oauth・gmail・contacts・calendar・outreach）の業務処理 → src/adapters/google の下へ移す（src/adapters/google.rs が既に在る）
+module	src/google/gmail.rs	gmail	1	violation	Google の各 service（oauth・gmail・contacts・calendar・outreach）の業務処理 → src/adapters/google の下へ移す（src/adapters/google.rs が既に在る）
+module	src/google/mod.rs	google	1	violation	Google の各 service（oauth・gmail・contacts・calendar・outreach）の業務処理 → src/adapters/google の下へ移す（src/adapters/google.rs が既に在る）
+module	src/google/oauth.rs	google	1	violation	Google の各 service（oauth・gmail・contacts・calendar・outreach）の業務処理 → src/adapters/google の下へ移す（src/adapters/google.rs が既に在る）
+module	src/google/outreach.rs	google	1	violation	Google の各 service（oauth・gmail・contacts・calendar・outreach）の業務処理 → src/adapters/google の下へ移す（src/adapters/google.rs が既に在る）
+module	src/media/apple_music.rs	apple_music	1	violation	Music.app の操作（kangae-media の PoC から）→ 要る機能は Adapter へ・PoC だけなら整理
+module	src/media/youtube.rs	youtube	1	violation	YouTube の検索・外の browser で開く（kangae-media の PoC から）→ 要る機能は Adapter へ・PoC だけなら整理
+table	src/generated.rs	reaper	1	violation	録画（11/02）の Add take to REAPER（TAKE_APPS = bundle id と audio::reaper::insert の組）。ENGINE-GENERIC-1101 の operator の決め 4 で印を付けて残す・録画の後に表ごと消して 0 に（owner 211）
+branch	src/ui/connections.rs	github	2	legit	表示の表: Connections の行の key（Shibubu の閉じた行 id = ai・github・web・gui・cli・mcp）→ icon（TITLEBAR-ICONS-1101 の 3・LAYOUT 25c11819）と、password manager の項目を選べる秘密の行（`takes_items` = github・web・PASSWORD-1101）。app の振る舞いの枝ではない・app.rs の github と同じ service の行

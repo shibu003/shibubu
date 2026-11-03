@@ -1,0 +1,11 @@
+# 赤のはずの行。kind<TAB>text<TAB>赤にする規則（各行はその規則 1 つだけで赤＝負の対照に使う）
+text	下の入力から直接頼めます	dekimasu
+text	ひとことでアプリを作る	ad-word
+text	一緒に始めましょう	ad-word
+text	最適な提案を表示	ad-word
+button	保存！	exclaim
+text	作ったアプリの一覧。選ぶと開く	multi
+hero	仕事も生活も一つの画面で変える	hero
+lead	選択したUIの構造と操作先	lead
+button	ライセンス・依存関係・取り込む範囲をレビューした	long-name
+placeholder	例: 予定を入れる。招待も送る	multi

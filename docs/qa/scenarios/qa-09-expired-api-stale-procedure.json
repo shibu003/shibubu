@@ -1,0 +1,132 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-09-expired-api-stale-procedure",
+  "title": "教えた手順は試験の前に Agent へ開かない・失効した API は止まって再接続を求める",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12 失効したAPI/古いProcedure→実行を止め再検証・§3 M2 Token失効でReadyを取り消す・§8 M7",
+    "DESIGN.md §14.4 Teach Mode（操作を教える・Teaching · Recording・Stop・テストとバージョン確認まではAgentに開放しない）・§11 Connection expired → 再接続する・§10 Revocation",
+    "KANGAE_MASTER_SPEC.md §5.3・§8.3 継続検証・§15 UC-08・UC-11"
+  ],
+  "scene": "週の予定を Kangae で見ている人。Mac の TextEdit で毎回する手順を Kangae に覚えさせたい",
+  "first_words": "今週の予定を一覧にして",
+  "out_of_scope": "app の版を本当に上げての stale 化（版を替えた機械が要る）。Teach Mode の記録の削除",
+  "preconditions": [
+    "test 用の Google account（本番の account を使わない・docs/ACCEPTANCE.md §3）",
+    "Teach Mode で教える相手は TextEdit（標準の app・個人の data を含まない新しい書類だけ）"
+  ],
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "present": [{ "text": "要接続|接続が必要", "match": "regex" }],
+        "absent": [{ "text": "接続済み", "match": "contains" }]
+      },
+      "evidence": "02-made.png"
+    },
+    {
+      "id": "s3",
+      "intent": "「操作を教える」を押す（まだ記録は始まらないはず）",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "操作を教える", "match": "contains" },
+      "expect": {
+        "absent": [{ "text": "Teaching · Recording", "match": "contains" }],
+        "review": ["同意の画面に、見る app・時間・保存先・止め方・消し方が出ている（DESIGN §14.4・IMPLEMENTATION_TODO §8）"]
+      },
+      "evidence": "03-consent.png",
+      "note": "押しただけでは記録を始めない（明示の opt-in）"
+    },
+    {
+      "id": "s4",
+      "intent": "人が同意の画面で TextEdit・5 分・この Mac だけを選んで始める",
+      "do": "operator",
+      "instruction": "同意の画面で 対象 = TextEdit・時間 = 5 分・保存先 = この Mac を選んで記録を始める",
+      "expect": { "present": [{ "text": "Teaching · Recording", "match": "contains" }, { "role": "AXButton", "label": "Stop", "match": "contains" }] },
+      "evidence": "04-recording.png"
+    },
+    {
+      "id": "s5",
+      "intent": "人が TextEdit で 1 つ操作する",
+      "do": "operator",
+      "instruction": "TextEdit で新しい書類を作り「テスト」と打つ（保存しない）",
+      "expect": { "present": [{ "text": "Teaching · Recording", "match": "contains" }] },
+      "evidence": "05-taught.png"
+    },
+    {
+      "id": "s6",
+      "intent": "Stop を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "Stop", "match": "contains" },
+      "expect": {
+        "present": [{ "text": "未検証|unverified|要検証|テスト前", "match": "regex" }],
+        "absent": [{ "text": "Teaching · Recording", "match": "contains" }]
+      },
+      "evidence": "06-stopped.png",
+      "note": "教えた手順は、試験と版の確認が済むまで Agent に開かない（DESIGN §14.4）"
+    },
+    {
+      "id": "s7",
+      "intent": "Cmd+K で command を開く",
+      "do": "key",
+      "keys": ["cmd", "k"],
+      "expect": { "absent": [{ "text": "Teaching · Recording", "match": "contains" }] },
+      "evidence": "07-command.png"
+    },
+    {
+      "id": "s8",
+      "intent": "Agent に今の手順を走らせるよう頼む",
+      "do": "type_focused",
+      "text": "さっき教えた手順を TextEdit で実行して",
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea", "AXComboBox"], "value": "さっき教えた手順", "match": "contains" }] },
+      "evidence": "08-asked.png"
+    },
+    {
+      "id": "s9",
+      "intent": "Return で頼む",
+      "do": "key",
+      "keys": ["return"],
+      "timeout_s": 90,
+      "expect": {
+        "present": [{ "text": "未検証|unverified|再検証|stale|確認待ち|承認が必要", "match": "regex" }],
+        "absent": [{ "text": "実行しました|完了しました", "match": "regex" }],
+        "review": ["試験と版の確認の前に、Agent が TextEdit を操作していない（TextEdit の画面で見る・UC-11）"]
+      },
+      "evidence": "09-held.png"
+    },
+    {
+      "id": "s10",
+      "intent": "人が test 用の Google account で繋ぐ",
+      "do": "operator",
+      "instruction": "test 用の Google account で接続し、今週の予定が一覧に出るまで進める",
+      "timeout_s": 120,
+      "expect": { "present": [{ "text": "接続済み|Connected|Ready", "match": "regex" }] },
+      "evidence": "10-connected.png"
+    },
+    {
+      "id": "s11",
+      "intent": "人が Google 側で Kangae の access を取り消す",
+      "do": "operator",
+      "instruction": "Google の account 設定（セキュリティ → サードパーティの接続）で Kangae の access を取り消し、Kangae に戻る",
+      "timeout_s": 120,
+      "expect": {
+        "present": [{ "role": "AXButton", "label": "再接続する", "match": "contains" }],
+        "absent": [{ "text": "接続済み", "match": "contains" }],
+        "review": ["取り消す前に出ていた一覧（local の preview）が消えずに残っている（DESIGN §11 Connection expired）"]
+      },
+      "evidence": "11-expired.png",
+      "note": "失効を ready のまま見せない（KANGAE_MASTER_SPEC §15 UC-08）"
+    }
+  ]
+}

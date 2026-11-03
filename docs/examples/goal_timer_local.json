@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "id": "timer_local",
+  "prompt": "簡単なタイマーを作って",
+  "goal": {
+    "objective": "指定時間を計って知らせる",
+    "success_signal": "開始・停止・再開・終了を端末内だけで実行できる"
+  },
+  "requirements": [
+    {
+      "id": "duration",
+      "statement": "時間を設定して計測する",
+      "origin": "explicit",
+      "necessity": "essential",
+      "confidence": 1
+    },
+    {
+      "id": "controls",
+      "statement": "開始・一時停止・リセット操作",
+      "origin": "inferred",
+      "necessity": "essential",
+      "confidence": 0.9
+    }
+  ],
+  "needs": [
+    {
+      "id": "timer_state",
+      "description": "ローカルの時間状態",
+      "effect": "local_write",
+      "status": "planned_local"
+    },
+    {
+      "id": "timer_alarm",
+      "description": "ローカルの終了通知",
+      "effect": "local_write",
+      "status": "proposed"
+    }
+  ],
+  "source_policy": "local_only",
+  "candidate_sources": [],
+  "ui_intents": [
+    {
+      "id": "timer",
+      "purpose": "時間表示・設定と操作",
+      "primary": true,
+      "representation_hint": "single-purpose compact utility"
+    }
+  ],
+  "questions": [],
+  "verification_plan": [
+    "ローカルタイマー開始・停止・時間切れのユニットテスト",
+    "アカウントやAndroid接続を求めない"
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-19-owner-test1-outreach",
+  "title": "owner の test1: LinkedIn / YC の list から営業メールの一括送信の画面 —「送る」の承認の手前で止める",
+  "sources": [
+    "docs/ACCEPTANCE.md §1 原文 test1・§3 test1_linkedin_gmail_outreach（場面・一言目・起きる事・見える物・要確認 ①〜③）",
+    "KANGAE_MASTER_SPEC.md §9 営業用途では公開連絡先と許可された受信者のみ・§12 営業を楽にしたい",
+    "DESIGN.md §6.1 後で接続・§10 High-impact actions・§11 確認待ち"
+  ],
+  "scene": "自分の LinkedIn に login 済みの人が、AI 開発・founder・engineer に営業したい",
+  "first_words": "LinkedIn の follower と following から AI 開発・founder・engineer の list を作って、営業メールを一括で送れる画面にして。YC の企業と投資家も list に。",
+  "out_of_scope": "承認より先（実際の送信・返信の取り込み）。ACCEPTANCE §3 要確認 ①〜③（LinkedIn の規約・公開連絡先だけか・送信上限）は owner の判断待ち",
+  "preconditions": ["test 用の LinkedIn / Gmail account（本番の account を使わない・docs/ACCEPTANCE.md §3）"],
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 180,
+      "expect": {
+        "present": [
+          { "text": "要接続|接続が必要", "match": "regex" },
+          { "role": "AXButton", "label": "後で接続", "match": "contains" }
+        ],
+        "absent": [
+          { "text": "接続済み", "match": "contains" },
+          { "text": "送信済み|送信しました", "match": "regex" },
+          { "text": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "match": "regex" }
+        ],
+        "review": ["LinkedIn・Gmail・YC それぞれの接続の状態と理由が文字で出ていて、偽の人の list を作っていない（DESIGN §11・§14.3）"]
+      },
+      "evidence": "02-plan.png"
+    },
+    {
+      "id": "s3",
+      "intent": "「後で接続」を押して、画面の形を見る",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "後で接続", "match": "contains" },
+      "timeout_s": 30,
+      "expect": {
+        "present": [
+          { "text": "LinkedIn", "match": "contains" },
+          { "text": "YC|Y Combinator", "match": "regex" }
+        ],
+        "absent": [{ "text": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "match": "regex" }],
+        "review": ["list の 2 枚（LinkedIn / YC）・下書き一覧・送信結果・返信欄の場所が出来ていて、data は空のまま（ACCEPTANCE test1 見える物）"]
+      },
+      "evidence": "03-shape.png"
+    },
+    {
+      "id": "s4",
+      "intent": "人が test 用の LinkedIn と Gmail で繋ぐ",
+      "do": "operator",
+      "instruction": "test 用の LinkedIn と Gmail で接続し、list と下書きが出るまで進める（本番の account を使わない）",
+      "timeout_s": 180,
+      "expect": {
+        "present": [
+          { "text": "下書き", "match": "contains" },
+          { "role": "AXButton", "label": "送る", "match": "contains" }
+        ],
+        "absent": [{ "text": "送信済み|送信しました|件送信", "match": "regex" }],
+        "review": ["相手ごとに名前と文が差し替わった下書きが並ぶ（ACCEPTANCE test1 (c)）"]
+      },
+      "evidence": "04-drafts.png"
+    },
+    {
+      "id": "s5",
+      "intent": "「送る」を押す（承認の画面が出るはず・ここで止める）",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "送る", "match": "contains" },
+      "high_impact": "review_only",
+      "timeout_s": 30,
+      "expect": {
+        "present": [{ "text": "確認待ち", "match": "contains" }],
+        "absent": [{ "text": "送信済み|送信しました|件送信", "match": "regex" }],
+        "review": ["確認待ちに宛先の数・相手ごとの本文・送信元 account・配信停止の手段・取り消せない事が出ている（DESIGN §10・KANGAE_MASTER_SPEC §9）"]
+      },
+      "evidence": "05-review.png",
+      "note": "runner は承認を押さない。台本はここで終わる"
+    }
+  ]
+}

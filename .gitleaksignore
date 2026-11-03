@@ -1,0 +1,6 @@
+# gitleaks の偽物を fingerprint（commit:file:rule:line）で 1 つずつ許す。hook の secret_scan（commit 直後の HEAD）と全履歴の検査が読む。
+# TERM-XTERM-1101 845eb08b: vendor/xterm の npm の minify された UMD（vendor/xterm/PACKAGES.md）の名前
+# SequencerByKey / FourKeyMap の連なった代入（minify の `t.<名>=` の列）が generic-api-key に当たる（秘密ではない）。
+845eb08bedcaeec04f7a17353b19f82756e72e55:vendor/xterm/addon-search.js:generic-api-key:1
+845eb08bedcaeec04f7a17353b19f82756e72e55:vendor/xterm/addon-webgl.js:generic-api-key:1
+845eb08bedcaeec04f7a17353b19f82756e72e55:vendor/xterm/xterm.js:generic-api-key:1

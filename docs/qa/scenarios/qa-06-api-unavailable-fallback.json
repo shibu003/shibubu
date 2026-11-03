@@ -1,0 +1,92 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-06-api-unavailable-fallback",
+  "title": "API に繋がらない → 未接続と代わりの道を出し、手で入れた data を保つ",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12 API接続不可→未接続・フォールバック・データ保持",
+    "DESIGN.md §10 On missing access … alternatives（ローカルで続ける・手動で選ぶ）・§6.1 後で接続・§11",
+    "KANGAE_MASTER_SPEC.md §4.3 故障時のルーティング 4〜5・§15 UC-08"
+  ],
+  "scene": "予定とメールを 1 か所で見たい人。Kangae は初めてで、Google にはまだ繋いでいない",
+  "first_words": "今週の予定とメールを一覧にして",
+  "out_of_scope": "network を切った状態（オフライン）の試験。Google に繋いだ後の失効は qa-09",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "present": [
+          { "text": "要接続|接続が必要", "match": "regex" },
+          { "role": "AXButton", "label": "後で接続", "match": "contains" },
+          { "role": "AXButton", "label": "ローカルで続ける", "match": "contains" }
+        ],
+        "absent": [
+          { "text": "接続済み", "match": "contains" },
+          { "text": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "match": "regex" }
+        ]
+      },
+      "evidence": "02-missing.png"
+    },
+    {
+      "id": "s3",
+      "intent": "「ローカルで続ける」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "ローカルで続ける", "match": "contains" },
+      "timeout_s": 30,
+      "expect": {
+        "present": [
+          { "text": "まだデータがありません", "match": "contains" },
+          { "text": "要接続|接続が必要|未接続", "match": "regex" }
+        ],
+        "absent": [{ "text": "接続済み", "match": "contains" }]
+      },
+      "evidence": "03-local.png",
+      "note": "local で進めても、繋がっていない事は見えたまま"
+    },
+    {
+      "id": "s4",
+      "intent": "「追加する」で 1 件を手で足し始める",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "追加する", "match": "contains" },
+      "settle_s": 1,
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea"] }] },
+      "evidence": "04-adding.png",
+      "note": "足した行の入力欄に focus が来る前提（DESIGN に明記は無い。来なければ s5 が FAIL になって分かる）"
+    },
+    {
+      "id": "s5",
+      "intent": "「A さんと打合せ」と打つ",
+      "do": "type_focused",
+      "text": "A さんと打合せ",
+      "expect": { "present": [{ "text": "A さんと打合せ", "match": "contains" }] },
+      "evidence": "05-typed-item.png"
+    },
+    {
+      "id": "s6",
+      "intent": "Kangae を閉じて開き直す",
+      "do": "restart",
+      "timeout_s": 30,
+      "expect": {
+        "present": [
+          { "text": "A さんと打合せ", "match": "contains" },
+          { "text": "要接続|接続が必要|未接続", "match": "regex" }
+        ],
+        "absent": [{ "text": "接続済み", "match": "contains" }]
+      },
+      "evidence": "06-restored.png",
+      "note": "手で入れた data は残り、接続の状態は偽らない"
+    }
+  ]
+}

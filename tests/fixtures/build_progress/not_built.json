@@ -1,0 +1,26 @@
+{
+  "goal": "あれ",
+  "passed": false,
+  "stop": "not_built",
+  "loss": null,
+  "remaining": [
+    "目的を 1 つ決める: 何を作りたいですか？（例: 在庫を整理したい・読書記録をつけたい・タイマーを作って）"
+  ],
+  "target": [],
+  "trace": [
+    {
+      "round": 0,
+      "layer": "compose",
+      "change": "composer::compose",
+      "loss": null,
+      "accepted": false,
+      "reason": "目的を 1 つ決める: 何を作りたいですか？（例: 在庫を整理したい・読書記録をつけたい・タイマーを作って）",
+      "dry_run": []
+    }
+  ],
+  "elapsed_ms": 2,
+  "app": null,
+  "software": [],
+  "decisions": [],
+  "codegen": []
+}

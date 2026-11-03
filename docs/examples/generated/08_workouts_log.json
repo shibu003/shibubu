@@ -1,0 +1,352 @@
+{
+  "actions": [
+    {
+      "effect": "local_read",
+      "id": "local.workouts.filter",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": false,
+      "verifier": "local_state"
+    },
+    {
+      "effect": "local_write",
+      "id": "local.workouts.add",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "format": "date",
+            "type": "string"
+          },
+          "exercise": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "reps": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sets": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "weight": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "exercise"
+        ],
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": false,
+      "verifier": "local_state"
+    },
+    {
+      "effect": "destructive",
+      "id": "local.workouts.delete",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scopes": [],
+      "requires_approval": true,
+      "verifier": "local_state"
+    }
+  ],
+  "agent": {
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail",
+    "policy_scope": [
+      "local"
+    ],
+    "suggestions_enabled": true
+  },
+  "capabilities": [],
+  "composition": {
+    "root": {
+      "children": [
+        {
+          "action_ref": "local.workouts.add",
+          "binding": {
+            "path": "draft",
+            "source_ref": "local.workouts"
+          },
+          "children": [],
+          "component": "form",
+          "key": "workouts-entry",
+          "label": "Log it",
+          "props": {
+            "fields": [
+              {
+                "input": "date",
+                "label": "Date",
+                "name": "date"
+              },
+              {
+                "input": "text",
+                "label": "Exercise",
+                "name": "exercise"
+              },
+              {
+                "input": "number",
+                "label": "Weight (kg)",
+                "name": "weight"
+              },
+              {
+                "input": "integer",
+                "label": "Reps",
+                "name": "reps"
+              },
+              {
+                "input": "integer",
+                "label": "Sets",
+                "name": "sets"
+              }
+            ]
+          },
+          "user_locked": false
+        },
+        {
+          "children": [
+            {
+              "binding": {
+                "path": "items",
+                "source_ref": "local.workouts"
+              },
+              "children": [],
+              "component": "timeline",
+              "key": "workouts-timeline",
+              "label": "ジム log",
+              "props": {
+                "columns": [
+                  "exercise",
+                  "date",
+                  "weight",
+                  "reps",
+                  "sets"
+                ],
+                "group_by": "date",
+                "order": "desc"
+              },
+              "role": "primary",
+              "states": {
+                "empty": "No ジム log yet. Start with “Log it”"
+              },
+              "user_locked": false
+            },
+            {
+              "children": [
+                {
+                  "action_ref": "local.workouts.delete",
+                  "children": [],
+                  "component": "button",
+                  "key": "workouts-delete",
+                  "label": "Delete",
+                  "props": {
+                    "variant": "danger"
+                  },
+                  "user_locked": false
+                }
+              ],
+              "component": "column",
+              "key": "workouts-selected",
+              "label": "Selected record",
+              "props": {},
+              "role": "context",
+              "user_locked": false,
+              "visibility": {
+                "when": "has_selection"
+              }
+            }
+          ],
+          "component": "split",
+          "key": "workouts-split",
+          "layout": {
+            "ratio": [
+              0.6,
+              0.4
+            ]
+          },
+          "props": {},
+          "user_locked": false
+        }
+      ],
+      "component": "column",
+      "key": "workouts-root",
+      "props": {},
+      "user_locked": false
+    },
+    "view_modes": [
+      "use",
+      "build",
+      "review"
+    ]
+  },
+  "goal": {
+    "assumptions": [
+      "端末内だけで動く。外部アカウント・スマホ・web login は使わない"
+    ],
+    "constraints": [
+      "利用者の承認なく外部のデータを読まない・送らない",
+      "削除は確認の後（DESIGN §4.1）"
+    ],
+    "literal_goal": "ジムの記録を残したい",
+    "outcomes": [
+      "ジムの記録をその場でつけられる",
+      "日付ごとに振り返れる",
+      "閉じて開き直しても残る"
+    ]
+  },
+  "id": "generated.workouts_log",
+  "metadata": {
+    "composer": {
+      "cadence": null,
+      "confidence": 0.9,
+      "discovery": [],
+      "errors": [],
+      "evidence": [
+        "述語「残し」",
+        "物「ジム」"
+      ],
+      "goal_plan": {
+        "candidate_sources": [],
+        "goal": {
+          "objective": "ジムを続けて記録し、あとから振り返る",
+          "success_signal": "ジムの記録をその場でつけられる"
+        },
+        "id": "workouts_log",
+        "needs": [
+          {
+            "description": "ジムを端末内で扱う（filter / add / delete）",
+            "effect": "local_write",
+            "id": "workouts_local",
+            "status": "planned_local"
+          }
+        ],
+        "prompt": "ジムの記録を残したい",
+        "questions": [],
+        "requirements": [
+          {
+            "confidence": 0.9,
+            "id": "outcome_1",
+            "necessity": "essential",
+            "origin": "explicit",
+            "statement": "ジムの記録をその場でつけられる"
+          },
+          {
+            "confidence": 0.81,
+            "id": "outcome_2",
+            "necessity": "useful",
+            "origin": "inferred",
+            "statement": "日付ごとに振り返れる"
+          },
+          {
+            "confidence": 0.81,
+            "id": "outcome_3",
+            "necessity": "useful",
+            "origin": "inferred",
+            "statement": "閉じて開き直しても残る"
+          }
+        ],
+        "schema_version": "1.0",
+        "source_policy": "local_only",
+        "ui_intents": [
+          {
+            "id": "workouts_timeline",
+            "primary": true,
+            "purpose": "Look back at ジム by date",
+            "representation_hint": "timeline"
+          }
+        ],
+        "verification_plan": [
+          "ready な action は全部 validate_invocation の smoke を通る",
+          "ready でない action を指す node は states.disabled に理由がある",
+          "state は BuildVerifier の判定（ready / partial）のまま。接続していない物を ready と言わない"
+        ]
+      },
+      "interpreter": "rule_based",
+      "job": "log",
+      "rationale": {
+        "workouts-delete": "ジムに「Delete」の操作がある（action local.workouts.delete）",
+        "workouts-entry": "入力の頻度が高いので form を上に常設（DESIGN §7: interaction frequency）",
+        "workouts-root": "縦に積む（ページ → 区画。card で包まない: DESIGN §3）",
+        "workouts-selected": "選択した 1 件だけを扱う文脈（選んだ時だけ出す）",
+        "workouts-split": "主役に 60% を渡す split（DESIGN §7: main focus region >= 60%）",
+        "workouts-timeline": "日付つきの記録 → timeline（新しい順・日付で束ねる）"
+      },
+      "rejected": [
+        {
+          "reason": "score 0.350 < 0.453: missing actions would have to be added later (undoable, but extra work)",
+          "strategy": "minimal"
+        }
+      ],
+      "solutions": [
+        {
+          "scores": {
+            "connection_cost": 0.0,
+            "latency": 0.1,
+            "reversibility": 0.9,
+            "risk": 0.1,
+            "utility": 0.87
+          },
+          "strategy": "local_first",
+          "summary": "Run everything on this Mac · no connection needed",
+          "total": 0.453
+        },
+        {
+          "scores": {
+            "connection_cost": 0.0,
+            "latency": 0.05,
+            "reversibility": 0.95,
+            "risk": 0.04,
+            "utility": 0.55
+          },
+          "strategy": "minimal",
+          "summary": "Only the main flow (no imports, side lists or suggestions)",
+          "total": 0.35
+        }
+      ],
+      "strategy": "local_first",
+      "subject": "ジムの記録",
+      "unknowns": []
+    }
+  },
+  "schema_version": "3.0",
+  "sources": [
+    {
+      "id": "local.workouts",
+      "kind": "local_collection",
+      "readiness": "local",
+      "scope": "app"
+    }
+  ],
+  "state": {
+    "execution_mode": "local_ready",
+    "readiness": "ready",
+    "status_message": "Works on this Mac · no connection needed"
+  },
+  "title": "ジムの記録",
+  "version": 1,
+  "workflows": []
+}

@@ -1,0 +1,87 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-10-visual-density",
+  "title": "どの画面にも 12px 未満の文字・名前の無い釦・色だけの状態が無い（card の過剰は写真で見る）",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12 各UIのCard過剰分割/12px未満の文字/色のみの状態表現がない",
+    "DESIGN.md §2.1 Text below 12 px is prohibited・§2.4 Status must include shape and text, not color alone・§3 Strict surface/card budget・§9 Every icon-only button has accessible name・§10 Available / Connected / Ready / Verified",
+    "KANGAE_MASTER_SPEC.md §10・§15 UC-15"
+  ],
+  "scene": "初めて Kangae を開き、timer を作り、提案と接続の画面も覗く人",
+  "first_words": "タイマーをつくって",
+  "out_of_scope": "contrast の数値（AX に色は出ない・release 前の自動検査）・dark mode",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "窓を 1440×900 にして Home を見る",
+      "do": "window",
+      "size": { "width": 1440, "height": 900 },
+      "expect": {
+        "text_min_h": 12,
+        "named": ["AXButton", "AXCheckBox", "AXTextField", "AXTextArea"],
+        "review": ["Home は見出し 1・CTA 1・例は 3 つまで、見出しの下の説明文が無く、card の入れ子が無い（DESIGN §1.1 Empty state・§6.1・§3。説明 1 行は §15.2-3 が上書きして 0）"]
+      },
+      "evidence": "01-home.png",
+      "note": "AX は文字の大きさを出さない。text_min_h は「12px の文字の行は高さ 12 を下回らない」の必要条件だけを見る"
+    },
+    {
+      "id": "s2",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "02-typed.png"
+    },
+    {
+      "id": "s3",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "absent": [{ "text": "何を作りたいですか？", "match": "contains" }],
+        "text_min_h": 12,
+        "named": ["AXButton", "AXCheckBox", "AXTextField", "AXTextArea"],
+        "review": ["生成した app の KPI card が 0、飾りの card・影・gradient が無い（DESIGN §3・§2.4）"]
+      },
+      "evidence": "03-app.png"
+    },
+    {
+      "id": "s4",
+      "intent": "✦ 提案 を開く",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" },
+      "expect": {
+        "text_min_h": 12,
+        "named": ["AXButton", "AXCheckBox", "AXTextField", "AXTextArea"],
+        "review": ["提案の行・履歴の行が card になっていない（DESIGN §3 Card prohibited for suggestion list items, history rows）"]
+      },
+      "evidence": "04-rail.png"
+    },
+    {
+      "id": "s5",
+      "intent": "Connections を開く",
+      "do": "click",
+      "target": { "label": "Connections" },
+      "expect": {
+        "present": [{ "text": "Available|Connected|Ready|Verified|利用可能|接続済み|未接続|接続が必要|要接続", "match": "regex" }],
+        "text_min_h": 12,
+        "named": ["AXButton", "AXCheckBox", "AXTextField", "AXTextArea"],
+        "review": ["接続の状態が色だけでなく形と文字で出ている（DESIGN §2.4・§14.2）"]
+      },
+      "evidence": "05-connections.png"
+    },
+    {
+      "id": "s6",
+      "intent": "窓を 390 幅まで狭める",
+      "do": "window",
+      "size": { "width": 390, "height": 800 },
+      "expect": {
+        "text_min_h": 12,
+        "review": ["狭くしても文字を 12 未満に縮めず、横 scroll が出ていない（DESIGN §3・§8）"]
+      },
+      "evidence": "06-narrow.png"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "id": "proposal.research.search",
+  "app_id": "example.research",
+  "app_version": 1,
+  "title": "ノート検索を追加",
+  "reason": "研究資料を増やしたあとも、内容を探しやすくするため",
+  "evidence": [
+    {
+      "kind": "user_goal",
+      "ref": "goal.literal_goal"
+    }
+  ],
+  "target_ref": "research-root",
+  "kind": "ui_patch",
+  "effect": "検索入力をノート一覧の上に追加",
+  "risk": "local_reversible",
+  "permission_scopes": [],
+  "undoable": true,
+  "status": "queued",
+  "change": {
+    "summary": "検索欄を追加し、ユーザーのノート以外を閲覧しない",
+    "operations": [
+      {
+        "op": "insert",
+        "target_key": "research-root",
+        "value": {
+          "key": "research-search",
+          "component": "input"
+        }
+      }
+    ]
+  }
+}

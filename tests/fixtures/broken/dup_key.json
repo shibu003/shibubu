@@ -1,0 +1,12 @@
+{
+  "schema_version": "3.0", "id": "broken.dup_key", "version": 1, "title": "UI key が重複",
+  "goal": {"literal_goal": "研究ノートを作りたい", "outcomes": ["研究ノートを作りたい"]},
+  "composition": {"root": {"key": "research-root", "component": "split", "props": {}, "children": [
+    {"key": "research-list", "component": "list", "props": {}, "binding": {"source_ref": "local.notes", "path": "notes"}},
+    {"key": "research-list", "component": "editor", "props": {}, "binding": {"source_ref": "local.notes", "path": "selected.body"}}
+  ]}},
+  "actions": [],
+  "sources": [{"id": "local.notes", "kind": "local_collection", "readiness": "local"}],
+  "agent": {"suggestions_enabled": true, "autonomy_level": "suggest_only", "entrypoint": "agent_rail"},
+  "state": {"readiness": "preview", "execution_mode": "local_demo"}
+}

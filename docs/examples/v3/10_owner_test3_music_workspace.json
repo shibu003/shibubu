@@ -1,0 +1,241 @@
+{
+  "schema_version": "3.0",
+  "id": "example.v3.owner_test3_music_workspace",
+  "version": 1,
+  "title": "音楽の作業場",
+  "goal": {
+    "literal_goal": "Reaper と YouTube と Apple Music を繋いで。Apple Music の library と download の曲を再生、YouTube の検索と再生の window も出して。鼻歌を録音して Reaper に音楽として入れて。",
+    "outcomes": [
+      "Apple Music の library / download の一覧と再生",
+      "YouTube の検索欄と再生 window（player は埋め込みか handoff）",
+      "録音 button で鼻歌を wav に。残り時間と波形が見える",
+      "録った wav を Reaper の track に insert（承認つき）"
+    ],
+    "assumptions": [
+      "Apple Music は Music.app の自動操作（OS の許可が要る）。曲 file 自体は Reaper に入れない（DRM・規約）",
+      "YouTube は公式 player の埋め込みか handoff。音声を抜かない。検索は API の key が要る",
+      "Reaper は ReaScript / OSC / web interface のどれかで繋ぐ（未選択）",
+      "mic は初回に OS の許可が出る"
+    ],
+    "constraints": [
+      "参考曲の音声を取り込まない（TEST-006: 取り込める前提にしない）",
+      "Reaper への insert は 1 回ずつ承認（external_write）",
+      "録音は本人の操作でだけ始まる"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "music-root",
+      "component": "split",
+      "layout": { "ratio": [0.5, 0.5] },
+      "children": [
+        {
+          "key": "music-sources",
+          "component": "tabs",
+          "role": "context",
+          "children": [
+            {
+              "key": "music-apple",
+              "component": "column",
+              "label": "Apple Music",
+              "children": [
+                {
+                  "key": "apple-library",
+                  "component": "list",
+                  "label": "library と download",
+                  "binding": { "source_ref": "apple_music", "path": "library" },
+                  "states": {
+                    "requires_connection": "Music.app の自動操作を許可すると、library と download の曲が出る",
+                    "empty": "曲がありません"
+                  }
+                },
+                {
+                  "key": "apple-play",
+                  "component": "button",
+                  "label": "再生 / 一時停止",
+                  "props": { "variant": "secondary" },
+                  "action_ref": "apple_music.playback",
+                  "states": { "disabled": "Music.app の自動操作を許可すると押せる" }
+                }
+              ]
+            },
+            {
+              "key": "music-youtube",
+              "component": "column",
+              "label": "YouTube",
+              "children": [
+                {
+                  "key": "yt-search",
+                  "component": "form",
+                  "label": "検索",
+                  "props": { "fields": [ { "name": "query", "label": "曲名・artist", "input": "text" } ] },
+                  "action_ref": "youtube.search",
+                  "states": { "disabled": "YouTube の検索は API の key を設定すると使える" }
+                },
+                {
+                  "key": "yt-results",
+                  "component": "list",
+                  "label": "検索結果",
+                  "binding": { "source_ref": "youtube", "path": "search_results" },
+                  "states": { "requires_connection": "key を設定すると検索できる", "empty": "結果はありません" }
+                },
+                {
+                  "key": "yt-player",
+                  "component": "source_surface",
+                  "label": "再生 window",
+                  "props": { "display": "embedded", "fallback": "handoff" },
+                  "action_ref": "youtube.player.open"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "music-record",
+          "component": "column",
+          "role": "primary",
+          "children": [
+            {
+              "key": "rec-recorder",
+              "component": "recorder",
+              "label": "鼻歌を録る",
+              "props": { "shows": ["remaining", "level"], "max_seconds": 300 },
+              "action_ref": "local.audio.record",
+              "states": { "disabled": "初回に mic の許可（OS）が要る。許可すると録れる" }
+            },
+            {
+              "key": "rec-wave",
+              "component": "waveform",
+              "label": "波形",
+              "binding": { "source_ref": "local.recordings", "path": "selected.waveform" }
+            },
+            {
+              "key": "rec-list",
+              "component": "list",
+              "label": "録音",
+              "binding": { "source_ref": "local.recordings", "path": "items" },
+              "states": { "empty": "まだ録音がありません" }
+            },
+            {
+              "key": "rec-insert",
+              "component": "button",
+              "label": "Reaper の track に入れる",
+              "props": { "variant": "primary" },
+              "action_ref": "reaper.insert_media",
+              "states": { "disabled": "Reaper を繋ぐ（ReaScript / OSC / web interface のどれか）と使える。1 回ずつ承認" }
+            },
+            {
+              "key": "rec-reaper-note",
+              "component": "text",
+              "props": { "style": "helper", "text": "Reaper 側の編集は Reaper で続ける（handoff）。" }
+            }
+          ]
+        }
+      ]
+    },
+    "view_modes": ["use", "build", "inspect", "run", "review"]
+  },
+  "capabilities": [
+    { "id": "apple_music.library.read", "provider": "apple", "readiness": "requires_connection", "required_scopes": ["music.library.read"], "adapter": "os_automation" },
+    { "id": "apple_music.playback", "provider": "apple", "readiness": "requires_connection", "required_scopes": ["music.playback"], "adapter": "os_automation" },
+    { "id": "youtube.search", "provider": "youtube", "readiness": "requires_connection", "required_scopes": ["youtube.search"], "adapter": "api" },
+    { "id": "web.embed", "provider": "youtube", "readiness": "discoverable", "required_scopes": [], "adapter": "embed" },
+    { "id": "web.handoff", "provider": null, "readiness": "ready", "required_scopes": [], "adapter": "handoff" },
+    { "id": "local.microphone", "provider": null, "readiness": "requires_connection", "required_scopes": ["microphone"], "adapter": "local_device" },
+    { "id": "reaper.insert_media", "provider": "reaper", "readiness": "requires_connection", "required_scopes": ["reaper.project.write"], "adapter": "os_automation" }
+  ],
+  "actions": [
+    {
+      "id": "apple_music.library.read",
+      "capability_ref": "apple_music.library.read",
+      "effect": "external_read",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "properties": { "scope": { "enum": ["library", "downloads"] } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "tracks": { "type": "array" }, "observed_at": { "type": "string" } } },
+      "required_scopes": ["music.library.read"],
+      "verifier": "read_back",
+      "requires_approval": false
+    },
+    {
+      "id": "apple_music.playback",
+      "capability_ref": "apple_music.playback",
+      "effect": "external_write",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["command"], "properties": { "command": { "enum": ["play", "pause", "toggle"] }, "track_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": ["music.playback"],
+      "verifier": "state_compare",
+      "requires_approval": false
+    },
+    {
+      "id": "youtube.search",
+      "capability_ref": "youtube.search",
+      "effect": "external_read",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["query"], "properties": { "query": { "type": "string", "minLength": 1 } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "results": { "type": "array" }, "observed_at": { "type": "string" } } },
+      "required_scopes": ["youtube.search"],
+      "verifier": "read_back",
+      "requires_approval": false
+    },
+    {
+      "id": "youtube.player.open",
+      "capability_ref": "web.handoff",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["video_id"], "properties": { "video_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "state_compare",
+      "requires_approval": false
+    },
+    {
+      "id": "local.audio.record",
+      "capability_ref": "local.microphone",
+      "effect": "local_write",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "properties": { "max_seconds": { "type": "integer", "minimum": 1, "maximum": 600 } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "recording_id": { "type": "string" }, "duration_ms": { "type": "integer" } } },
+      "required_scopes": ["microphone"],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "reaper.insert_media",
+      "capability_ref": "reaper.insert_media",
+      "effect": "external_write",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["recording_id"], "properties": { "recording_id": { "type": "string" }, "track_name": { "type": "string" } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "status": { "enum": ["inserted", "failed", "unverified"] } } },
+      "required_scopes": ["reaper.project.write"],
+      "verifier": "state_compare",
+      "requires_approval": true
+    }
+  ],
+  "sources": [
+    { "id": "apple_music", "kind": "os_automation", "readiness": "requires_connection", "provider": "apple", "last_observed_at": null },
+    { "id": "youtube", "kind": "external_api", "readiness": "requires_connection", "provider": "youtube", "last_observed_at": null },
+    { "id": "local.recordings", "kind": "local_collection", "readiness": "local", "scope": "app" },
+    { "id": "reaper", "kind": "os_automation", "readiness": "requires_connection", "provider": "reaper", "last_observed_at": null }
+  ],
+  "workflows": [
+    { "id": "hum_to_reaper", "action_refs": ["local.audio.record", "reaper.insert_media"], "approval": "per_insert" }
+  ],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "ask_before_external_effects",
+    "entrypoint": "agent_rail",
+    "policy_scope": ["local.recordings", "reaper.insert_media:approval_required", "no_audio_extraction"]
+  },
+  "state": {
+    "readiness": "partial",
+    "execution_mode": "local_ready",
+    "status_message": "YouTube の window は開ける。Apple Music・検索・録音・Reaper は許可と接続の後。"
+  },
+  "metadata": {
+    "corpus": {
+      "prompt": "Reaper と YouTube と Apple Music を繋いで。Apple Music の library と download の曲を再生、YouTube の検索と再生の window も出して。鼻歌を録音して Reaper に音楽として入れて。",
+      "todo": ["ACCEPTANCE test3", "TEST-006", "CON-006", "LEG-007"],
+      "differs_by": "media / timeline 系（recorder・waveform・source_surface embedded→handoff）。mic は capability（requires_connection = OS の許可）。Reaper insert は承認つき external_write",
+      "scene": "owner の受け入れ test3（docs/ACCEPTANCE.md §3）。参考曲の音声を取り込まない。接続方式（ReaScript / OSC / web）は未選択のまま"
+    }
+  }
+}

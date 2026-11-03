@@ -1,0 +1,13 @@
+{
+ "elements": [
+  {
+   "depth": 1,
+   "element_index": 25,
+   "label": "済みました（元の app の実状態で 2 件を確かめました）",
+   "parent_index": 0,
+   "role": "AXStaticText",
+   "value": "済みました（元の app の実状態で 2 件を確かめました）"
+  }
+ ],
+ "tree_markdown": "  - AXStaticText = \"✓ 検証済み\"\n  - [25] AXStaticText = \"済みました（元の app の実状態で 2 件を確かめました）\" [actions=[press]]\n  - AXStaticText = \"Terminal はまだこの Page に出せません。repo の場所は保存しました\""
+}

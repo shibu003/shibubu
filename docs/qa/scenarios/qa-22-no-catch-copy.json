@@ -1,0 +1,130 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-22-no-catch-copy",
+  "title": "どの画面にも、生成した app にも、宣伝文・説明文が 0（操作の名前・状態の事実・error の理由と次の一手だけ）",
+  "sources": [
+    "DESIGN.md §15.2-3 余計なキャッチコピーは一切出さない（§1.1 の one-line description と Empty state の explanatory line を上書き）",
+    "DESIGN.md §15.2-4 AI が作る UI も同じ規則・§15.2-5(a) 禁止語・宣伝文の型（〜できます・まず〜・〜から組み立て・ひとことで）",
+    "DESIGN.md §1.2 Primary nav: Home, Apps, Runs, Connections・§1.1 Content opening の title・§5.1 次にできること"
+  ],
+  "scene": "初めて Kangae を開いた人。どの service にも login していない。何が出来るのかを sidebar の画面を順に覗いて確かめ、timer を 1 つ作ってみる",
+  "first_words": "タイマーをつくって",
+  "out_of_scope": "文字の大きさと card の数（qa-10）・skeleton（qa-23）・animation（qa-24）・接続した後の data の文",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "窓を 1440×900 にして、開いてすぐの Home を見る",
+      "do": "window",
+      "size": { "width": 1440, "height": 900 },
+      "expect": {
+        "present": [{ "text": "何を作りたいですか？", "match": "contains" }],
+        "absent": [
+          { "text": "できます|(^|[。!?\\s])まず|から組み立て|ひとことで|一言で", "match": "regex" },
+          { "role": "AXStaticText", "text": "。[^。]+。", "match": "regex" }
+        ],
+        "review": ["Home の見出しの下に説明文・宣伝文が無い。残っているのは見出し・入力欄・操作の名前・例の釦だけ（DESIGN §15.2-3）"]
+      },
+      "evidence": "01-home.png",
+      "note": "present の見出し（DESIGN §6.1）は、Home の文字が AX に出ている事の確かめ（出ていなければ absent は何も見ていない）。1 つ目の absent は §15.2-5(a) の型（NFKC の後なので ！？ は !? で書く）。2 つ目は 1 つの文字の要素に 2 文以上 = 説明文（状態は事実 1 行・§15.2-3）"
+    },
+    {
+      "id": "s2",
+      "intent": "sidebar の Apps を押す",
+      "do": "click",
+      "target": { "label": "Apps" },
+      "expect": {
+        "present": [{ "text": "Apps", "min": 2 }],
+        "absent": [
+          { "text": "できます|(^|[。!?\\s])まず|から組み立て|ひとことで|一言で", "match": "regex" },
+          { "role": "AXStaticText", "text": "。[^。]+。", "match": "regex" }
+        ],
+        "review": ["まだ app が無い Apps に「〜できます」型の説明が無く、状態は事実 1 行（DESIGN §15.2-3）"]
+      },
+      "evidence": "02-apps.png",
+      "note": "present の 2 件 = sidebar の Apps と本文の title（DESIGN §1.1 Content opening の title）。押した後に画面が変わった事を absent だけで済ませない"
+    },
+    {
+      "id": "s3",
+      "intent": "sidebar の Runs を押す",
+      "do": "click",
+      "target": { "label": "Runs" },
+      "expect": {
+        "present": [{ "text": "Runs", "min": 2 }],
+        "absent": [
+          { "text": "できます|(^|[。!?\\s])まず|から組み立て|ひとことで|一言で", "match": "regex" },
+          { "role": "AXStaticText", "text": "。[^。]+。", "match": "regex" }
+        ],
+        "review": ["まだ実行が無い Runs に説明文が無く、状態は事実 1 行（DESIGN §15.2-3）"]
+      },
+      "evidence": "03-runs.png"
+    },
+    {
+      "id": "s4",
+      "intent": "sidebar の Connections を押す",
+      "do": "click",
+      "target": { "label": "Connections" },
+      "expect": {
+        "present": [{ "text": "Connections", "min": 2 }],
+        "absent": [{ "text": "できます|(^|[。!?\\s])まず|から組み立て|ひとことで|一言で", "match": "regex" }],
+        "review": ["接続の行は名前・状態・次の一手だけで、service の売り文句が無い（DESIGN §15.2-3）"]
+      },
+      "evidence": "04-connections.png",
+      "note": "未接続の理由と次の一手は 2 文になりうる（§15.2-3 で残してよい物）ので、ここでは 2 文の検査をしない"
+    },
+    {
+      "id": "s5",
+      "intent": "sidebar の Home に戻る",
+      "do": "click",
+      "target": { "label": "Home" },
+      "expect": {
+        "present": [{ "text": "何を作りたいですか？", "match": "contains" }],
+        "absent": [
+          { "text": "できます|(^|[。!?\\s])まず|から組み立て|ひとことで|一言で", "match": "regex" },
+          { "role": "AXStaticText", "text": "。[^。]+。", "match": "regex" }
+        ]
+      },
+      "evidence": "05-home-again.png",
+      "note": "Home の見出しは「何を作りたいですか？」（DESIGN §6.1）。見出しの文字か入力欄の名前のどちらかに在ればよい"
+    },
+    {
+      "id": "s6",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "06-typed.png"
+    },
+    {
+      "id": "s7",
+      "intent": "「作る」を押し、出来た timer の画面を見る",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "present": [{ "text": "^[0-9]{1,2}:[0-9]{2}(:[0-9]{2})?$", "match": "regex" }],
+        "absent": [
+          { "text": "できます|(^|[。!?\\s])まず|から組み立て|ひとことで|一言で", "match": "regex" },
+          { "role": "AXStaticText", "text": "。[^。]+。", "match": "regex" },
+          { "text": "何を作りたいですか？", "match": "contains" }
+        ],
+        "review": ["生成した app の text は label・状態・data だけ。頼んでいない部品・説明文・飾りが足されていない（DESIGN §15.2-4）"]
+      },
+      "evidence": "07-app.png",
+      "note": "AI が作る UI にも同じ規則（§15.2-4）。時刻の表示 1 つで app が出来た事だけを見る（timer の動きは qa-01）"
+    },
+    {
+      "id": "s8",
+      "intent": "✦ 提案 を開く",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" },
+      "expect": {
+        "present": [{ "text": "次にできること", "match": "contains" }],
+        "absent": [{ "text": "できます|(^|[。!?\\s])まず|から組み立て|ひとことで|一言で", "match": "regex" }],
+        "review": ["rail の見出しの下に説明文が無く、提案の行は題・根拠・操作の名前だけ（DESIGN §15.2-3・§5.2）"]
+      },
+      "evidence": "08-rail.png",
+      "note": "提案の本文は 1〜2 行の説明を持てる（§5.2）ので 2 文の検査はしない。「次にできること」は節の名前（§5.1）で「できます」には当たらない"
+    }
+  ]
+}

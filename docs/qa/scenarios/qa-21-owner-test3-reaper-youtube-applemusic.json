@@ -1,0 +1,89 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-21-owner-test3-reaper-youtube-applemusic",
+  "title": "owner の test3: REAPER・YouTube・Apple Music を繋ぎ、鼻歌を録って REAPER へ — 取り込みの承認の手前で止める",
+  "sources": [
+    "docs/ACCEPTANCE.md §1 原文 test3・§3 test3_reaper_youtube_applemusic_app（場面・一言目・起きる事・見える物）",
+    "KANGAE_MASTER_SPEC.md §11 Music Workspace（§11.1 配置は一例・§11.2 保護音源を抜かない）",
+    "docs/MUSIC_WORKSPACE_CASE_STUDY.md §3 状態・エラー・§8 最小受け入れシナリオ"
+  ],
+  "scene": "曲を作る人。参考曲を聴きながら、鼻歌で主旋律を録って DAW に入れたい",
+  "first_words": "Reaper と YouTube と Apple Music を繋いで。Apple Music の library と download の曲を再生、YouTube の検索と再生の window も出して。鼻歌を録音して Reaper に音楽として入れて。",
+  "out_of_scope": "承認より先（REAPER への実際の取り込みは qa-04）。Apple Music の再生と YouTube の検索・再生の中身（account と network が要る）",
+  "preconditions": [
+    "QA 機で、Kangae を起こす terminal に mic の許可を出しておく",
+    "REAPER で test 用の空の project を開いておく"
+  ],
+  "requires_apps": ["/Applications/REAPER.app"],
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 180,
+      "expect": {
+        "present": [
+          { "text": "(?i)reaper", "match": "regex" },
+          { "text": "(?i)youtube", "match": "regex" },
+          { "text": "Apple Music", "match": "contains" },
+          { "role": "AXButton", "label": "録音", "match": "contains" }
+        ],
+        "absent": [{ "text": "取り込みました|追加しました", "match": "regex" }],
+        "review": [
+          "REAPER が主の面、Apple Music と YouTube が補助の面、録音が下の帯（KANGAE_MASTER_SPEC §11.1。配置は一例で、主の面が一番広ければよい）",
+          "曲一覧（Apple Music）と YouTube の検索欄・再生の窓が在り、YouTube の再生は公式の player か外部の browser（音声を抜かない・§11.2）"
+        ]
+      },
+      "evidence": "02-workspace.png"
+    },
+    {
+      "id": "s3",
+      "intent": "録音を押して 3 秒鼻歌を入れる",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "録音", "match": "contains" },
+      "settle_s": 3,
+      "expect": { "present": [{ "role": "AXButton", "label": "停止", "match": "contains" }] },
+      "evidence": "03-recording.png"
+    },
+    {
+      "id": "s4",
+      "intent": "停止を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "停止", "match": "contains" },
+      "settle_s": 1,
+      "timeout_s": 20,
+      "expect": {
+        "present": [
+          { "role": "AXButton", "label": "試聴", "match": "contains" },
+          { "role": "AXButton", "label": "Add to REAPER", "match": "contains" }
+        ]
+      },
+      "evidence": "04-take.png"
+    },
+    {
+      "id": "s5",
+      "intent": "Add to REAPER を押す（承認の画面が出るはず・ここで止める）",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "Add to REAPER", "match": "contains" },
+      "high_impact": "review_only",
+      "timeout_s": 20,
+      "expect": {
+        "present": [{ "text": "確認待ち", "match": "contains" }, { "text": "(?i)reaper", "match": "regex" }],
+        "absent": [{ "text": "取り込みました|追加しました", "match": "regex" }],
+        "review": ["確認待ちに取り込み先の project と track が出ている（DESIGN §10）"]
+      },
+      "evidence": "05-review.png",
+      "note": "runner は承認を押さない。台本はここで終わる"
+    }
+  ]
+}

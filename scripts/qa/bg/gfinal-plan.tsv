@@ -1,0 +1,22 @@
+# gfinal-plan.tsv — G-final の BG の走らせ直しの順序の表（YC_WAVES の受け入れの順）。tab 区切り・空の欄は '-'
+# item の頭が「[任意]」の行は、未測でも gfinal-bg.sh の exit を 6 にしない（gfinal-tally.py の OPT）
+# n	wave	item	llm(1 run の LLM 呼び出し回数・上限 10)	est_s	cmd({R}=run dir {app}=.app・'-'=driver 無し)	note(driver 無しは理由)
+1	W5	Page 切替で Terminal の pid が生き続ける	0	600	python3 -I docs/evidence/W5/drive-w5.py {R} {app}	目安（過去の実測 log 無し）
+2	W9	CLI の pages / surfaces が AX・ps と一致	0	900	python3 -I docs/evidence/W9/drive-w9.py {R} {app}	目安（過去の実測 log 無し）
+3	W10	Terminal の AX と tmux の全行一致・seq 200000 で UI が止まらない	0	1500	python3 -I docs/evidence/W10/drive-w10.py {R} {app}	上限=W10_BUDGET_S 既定 1500
+4	W11	失敗の RunReceipt・Human lease	0	1500	python3 -I docs/evidence/W11/drive-w11.py {R} {app}	上限=W11_BUDGET_S 既定 1500
+5	W11	lease の 5 秒・AI の拒否 (2 本目)	0	1500	W11_EV={R}/ev python3 -I docs/evidence/W11/drive-w11b.py {R} {app}	上限=W11_BUDGET_S 既定 1500
+6	W13c	配置の型 (Dev の main=Terminal・side=Git)	0	1200	W13C_OUT={R}/shots python3 -I docs/evidence/W13c/drive-w13c.py {R} {app}	上限=W13C_BUDGET_S 既定 1200
+7	W14	LLM の上限 calls=1 (偽の CLI・quota 0)	0	1200	W14_OUT={R}/shots python3 -I docs/evidence/W14/drive-w14.py {R} {app}	上限=W14_BUDGET_S 既定 1200
+8	W14b	読書記録の席 usable	0	1200	MODE=book W14B_OUT={R}/shots python3 -I docs/evidence/W14b/drive-w14b.py {R} {app}	上限=W14B_BUDGET_S 既定 1200
+9	W14b	主デモの Dev/Docs/Diagram の席 usable	0	1200	MODE=demo W14B_OUT={R}/shots python3 -I docs/evidence/W14b/drive-w14b.py {R} {app}	上限=W14B_BUDGET_S 既定 1200
+10	W15	通し 1 回目 (B1・Undo・再起動・90 秒)	0	1260	INTEG_OUT={R}/shots python3 -I docs/evidence/W15/drive-w15.py {R} {app}	実測 1259s (docs/evidence/W15/log.md run 1・load 67-112 下)
+11	W15	通し 2 回目	0	1260	INTEG_OUT={R}/shots python3 -I docs/evidence/W15/drive-w15.py {R} {app}	同上
+12	W15	通し 3 回目	0	1260	INTEG_OUT={R}/shots python3 -I docs/evidence/W15/drive-w15.py {R} {app}	同上
+13	G-final	筋書き 27 手の BG の部分 (docs/demo/full.md・n=1)	0	600	bash scripts/qa/bg/rehearse.sh 1 {app} --out {R}	TARGET_S=600
+14	W12W-1c	normal_low の場	0	300	python3 -I scripts/qa/bg/drive-w12w1c.py normal_low {R} {app}	手 6 つ・目安（実測 log 無し）。rc 6 = owner 使用中で未測
+15	W12W-1c	normal_load の場	0	300	python3 -I scripts/qa/bg/drive-w12w1c.py normal_load {R} {app}	run.sh load 4 本 × 600 秒を drive の中で重ねる・目安
+16	W13	I3 held-out の一言 (1 run 1 文・6 run に分ける)	3	600	SHIBUBU_QA_LLM=1 python3 -I scripts/qa/bg/drive-i3.py {R} {app}	文は ~/.config/shibubu/heldout.txt（repo の外）・LLM は owner の quota の承認がある時だけ（無ければ 6 本とも走らせない）・目安
+17	W12W-3	B4 GitHub の comment (既定 dry-run)	0	300	python3 -I scripts/qa/bg/drive-b4.py {R} {app} ${GFINAL_REALLY:+--really}	既定は外に出ず rc 6=未測。GFINAL_REALLY=1 と SHIBUBU_QA_GH_ISSUE の時だけ本番（owner の GitHub login・operator の合図）
+18	W19-3b	[任意] G の ⑥ 再起動後の AI の手	0	0	-	gfinal-bg.sh の対象外: yc/gui の release の .app が要る (別の worktree)
+19	W19-3	[任意] 本物の REA	0	0	-	gfinal-bg.sh の対象外: 別の worktree の .app

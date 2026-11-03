@@ -1,0 +1,17 @@
+# release の門（RULE-DENY・owner 10-28「自作しない」・YC_DECISIONS 86 通目）: 依存の license だけを見る。
+#   cargo deny check licenses    ← scripts/lint.sh が回す。advisories / sources は今は見ない（11/02 の後に owner が決める）
+# allow は今の依存が実際に使っている permissive な物だけ（YC_DECISIONS 12 通目の MPL-2.0 を含む）。足す時は `cargo deny list` の実数を見てから。
+# OR の式は片側でも許せば通る（例: r-efi の MIT OR Apache-2.0 OR LGPL-2.1-or-later）。GPL / AGPL / license 無しは allow に無いので赤になる。
+[graph]
+all-features = true
+
+[licenses]
+allow = [
+  "MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib", "0BSD",
+  "Unicode-3.0", "MPL-2.0", "CC0-1.0", "BSL-1.0", "Unlicense", "CDLA-Permissive-2.0",
+  "OFL-1.1", "Ubuntu-font-1.0",   # epaint_default_fonts の同梱 font
+]
+confidence-threshold = 0.8
+
+[licenses.private]
+ignore = true   # 自分の crate（shibubu・vendor/ の写し）。vendor/ の LICENSE は scripts/release/third_party_notices.py --check が見る

@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "shibubu.qa.records",
+  "description": "scripts/qa/bg の試験の道具が書く記録の保存形式の正本。front-guard と oracle/windows の Swift の型（lib/Records.swift）・run.sh・oracle/github.sh・tally.py はこの形を書き / 読む。schema 欄の版を変えたら読む側は知らない版で止まる。座標は global の point（左上原点・Retina の倍率なし）、時刻 t は unix 秒。",
+  "$defs": {
+    "detection": { "enum": ["front", "activation", "zorder", "space", "focus", "owner_frame", "leak"] },
+    "unmeasured_reason": { "enum": ["accessibility_denied", "screen_recording_denied", "no_owner_front", "no_needle", "watcher_not_running", "no_focus_element", "owner_pointer"] },
+    "unmeasured_map": { "type": "object", "propertyNames": { "$ref": "#/$defs/detection" }, "additionalProperties": { "$ref": "#/$defs/unmeasured_reason" } },
+    "point": { "type": "object", "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+    "rect": { "type": "object", "required": ["x", "y", "w", "h"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number" }, "h": { "type": "number" } } },
+    "app": { "type": "object", "required": ["pid"], "properties": { "pid": { "type": "integer" }, "bundle_id": { "type": ["string", "null"] }, "name": { "type": ["string", "null"] } } },
+    "window": {
+      "type": "object",
+      "required": ["window_id", "pid", "layer", "bounds", "onscreen", "z"],
+      "properties": {
+        "window_id": { "type": "integer" }, "pid": { "type": "integer" }, "owner": { "type": ["string", "null"] }, "name": { "type": ["string", "null"] },
+        "layer": { "type": "integer" }, "bounds": { "$ref": "#/$defs/rect" }, "onscreen": { "type": "boolean" },
+        "z": { "type": "integer", "description": "on screen の窓を前から数えた順位（0 が一番前）。off screen は -1" }
+      }
+    },
+    "focus": {
+      "type": "object",
+      "required": ["pid"],
+      "properties": {
+        "pid": { "type": "integer" }, "role": { "type": ["string", "null"] }, "subrole": { "type": ["string", "null"] }, "identifier": { "type": ["string", "null"] },
+        "frame": { "oneOf": [{ "$ref": "#/$defs/rect" }, { "type": "null" }] },
+        "needle_present": { "type": ["boolean", "null"], "description": "snap --needle の時だけ。値そのものは記録しない" }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "required": ["schema", "t", "cursor", "windows", "unmeasured"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.snapshot/1" }, "t": { "type": "number" },
+        "front": { "oneOf": [{ "$ref": "#/$defs/app" }, { "type": "null" }] }, "cursor": { "$ref": "#/$defs/point" },
+        "focus": { "oneOf": [{ "$ref": "#/$defs/focus" }, { "type": "null" }] },
+        "windows": { "type": "array", "items": { "$ref": "#/$defs/window" } }, "unmeasured": { "$ref": "#/$defs/unmeasured_map" },
+        "targets": { "type": "array", "description": "snap --pid の時だけ（W15-b70）。起きていない pid は入れない", "items": { "type": "object", "required": ["pid", "hidden", "onscreen_windows"],
+          "properties": { "pid": { "type": "integer" }, "name": { "type": ["string", "null"] }, "hidden": { "type": "boolean", "description": "NSRunningApplication.isHidden" }, "onscreen_windows": { "type": "integer", "description": "on screen・layer 0・pid 一致の窓の数" } } } }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["schema", "t", "kind"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.event/1" }, "t": { "type": "number" },
+        "kind": { "enum": ["start", "stop", "activated", "space_changed", "z_sample"] },
+        "app": { "$ref": "#/$defs/app" }, "windows": { "type": "array", "items": { "$ref": "#/$defs/window" } }
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "required": ["schema", "step", "ok", "violations", "measured", "unmeasured"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.verdict/1" }, "step": { "type": "string" },
+        "ok": { "type": "boolean", "description": "violations が 0 かつ unmeasured が空の時だけ true" },
+        "violations": { "type": "array", "items": { "type": "object", "required": ["detection", "t", "detail"], "properties": { "detection": { "$ref": "#/$defs/detection" }, "t": { "type": "number" }, "detail": { "type": "string" } } } },
+        "measured": { "type": "array", "items": { "$ref": "#/$defs/detection" } }, "unmeasured": { "$ref": "#/$defs/unmeasured_map" }
+      }
+    },
+    "windows_reading": {
+      "type": "object",
+      "required": ["schema", "t", "windows"],
+      "properties": { "schema": { "const": "shibubu.qa.windows/1" }, "t": { "type": "number" }, "pid": { "type": ["integer", "null"] }, "windows": { "type": "array", "items": { "$ref": "#/$defs/window" } } }
+    },
+    "ax_attempt": {
+      "type": "object",
+      "required": ["outcome", "ax_code", "elapsed_ms", "count"],
+      "description": "W12W-1c: AX の 1 属性を 1 回読んだ結果。空（empty）と答えない（error・timeout）と許可無し（not_trusted）を混ぜない",
+      "properties": {
+        "outcome": { "enum": ["answered", "empty", "error", "timeout", "not_trusted"] },
+        "ax_code": { "type": "string", "description": "AXError の名前（success・cannot_complete・no_value…・bridge の axName と同じ綴り）" },
+        "elapsed_ms": { "type": "number" }, "count": { "type": "integer", "description": "窓の数（main_window・focused_window は 0 か 1）" }
+      }
+    },
+    "axprobe": {
+      "type": "object",
+      "required": ["schema", "t", "step", "pid", "trusted", "ax", "cg", "space", "pressure"],
+      "description": "W12W-1c: want・pri・pressure.swap_used_mb・pressure.hid_idle_s は無い時は欄ごと無い（Swift の Optional・null も読む）。bin/axprobe --pid <run.json の pid> --step <name> [--want <AX identifier>] [--timeout-ms 10000] が 1 手に 1 つ書く（steps/<name>.axprobe.json）。pid の app の AX だけを読む",
+      "properties": {
+        "schema": { "const": "shibubu.qa.axprobe/1" }, "t": { "type": "number" }, "step": { "type": "string" }, "pid": { "type": "integer" },
+        "trusted": { "type": "boolean", "description": "axprobe の AXIsProcessTrusted" },
+        "ax": {
+          "type": "object", "required": ["windows", "main_window", "focused_window"],
+          "properties": { "windows": { "$ref": "#/$defs/ax_attempt" }, "main_window": { "$ref": "#/$defs/ax_attempt" }, "focused_window": { "$ref": "#/$defs/ax_attempt" } }
+        },
+        "want": {
+          "oneOf": [{ "type": "null" }, {
+            "type": "object", "required": ["identifier", "found", "visited", "complete", "elapsed_ms"],
+            "properties": { "identifier": { "type": "string", "description": "--want そのまま: AX identifier の一致・末尾 * は前方一致・role=<AXRole> は role の一致" }, "found": { "type": "boolean" }, "visited": { "type": "integer" },
+                            "complete": { "type": "boolean", "description": "上限の前に木を全部見た。false で found も false なら欠けたとは言えない" }, "elapsed_ms": { "type": "number" } } }]
+        },
+        "cg": { "type": "array", "items": { "$ref": "#/$defs/window" }, "description": "その pid の CG の窓（off screen も・z = -1）" },
+        "space": { "enum": ["normal", "fullscreen", "split_view", "unknown"], "description": "今の Space の種類。公開 API で決まらなければ unknown" },
+        "pri": { "type": ["integer", "null"], "description": "その pid の scheduling priority（ps -o pri・App Nap の帯は 4）。記録だけで判定に使わない。無い時は欄ごと無い" },
+        "pressure": {
+          "type": "object", "required": ["load1", "ncpu", "memory_pressure"],
+          "description": "混雑の生の数。判定は tally.py の Thresholds（load と ncpu は記録だけで閾値にしない・owner 13 通目）",
+          "properties": {
+            "load1": { "type": "number" }, "ncpu": { "type": "integer" },
+            "memory_pressure": { "enum": ["normal", "warn", "critical", "unknown"] },
+            "swap_used_mb": { "type": ["number", "null"] }, "hid_idle_s": { "type": ["number", "null"], "description": "120 未満 = owner が PC を使っている（自分の type_text でも戻る・参考）" },
+            "mouse_idle_s": { "type": ["number", "null"], "description": "W15-b42: pointer の最後の入力からの秒（自分の手では戻らない）" }, "key_idle_s": { "type": ["number", "null"], "description": "W15-b42: 最後の keyDown からの秒（type_text でも戻る・自分の post の時刻を除いて読む）" }
+          }
+        }
+      }
+    },
+    "cause": {
+      "type": "object",
+      "required": ["step", "product", "driver", "operable"],
+      "description": "W12W-1c: tally.py の cause_of が 1 手を切り分けた結果。製品の判定（product）と cua-driver の検証の判定（driver）は独立（片方からもう片方を決めない）",
+      "properties": {
+        "step": { "type": "string" },
+        "product": {
+          "type": "object", "required": ["kind", "reason", "numbers"],
+          "properties": {
+            "kind": { "enum": ["ok", "defect", "environment", "unmeasured"] },
+            "reason": { "enum": ["reached", "answered", "elements_missing", "not_trusted", "off_space", "ax_timeout", "congested", "ax_empty", "no_probe", "no_cg_window", "walk_incomplete", "other"],
+                        "description": "kind ごとの値は tally.py の PRODUCT_REASONS が正" },
+            "numbers": { "type": "object", "description": "決めた根拠の数値（ax の elapsed_ms の最大・load1・ncpu・memory_pressure・swap_used_mb など）。W12W-1c の場: self_load = axprobe の t が run.sh load の窓（load.jsonl の t0〜t1）の中（count が足す・判定には使わない）" }
+          }
+        },
+        "driver": {
+          "type": "object", "required": ["kind", "reason", "element_count"],
+          "properties": {
+            "kind": { "enum": ["resolved", "unresolved", "unmeasured"] },
+            "reason": { "type": ["string", "null"], "description": "unresolved は cua-driver の refusal の code（ax_window_unresolved など）・unmeasured は応答が無い / 読めない理由" },
+            "element_count": { "type": ["integer", "null"] }
+          }
+        },
+        "operable": { "type": "boolean", "description": "AX で want の要素に届いた時だけ true（CG に窓が在るだけでは false）" }
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": ["schema", "app", "pid", "data_dir", "started_at"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.run/1" }, "app": { "type": "string" }, "app_sha256": { "type": "string" },
+        "pid": { "type": "integer" }, "window_id": { "type": ["integer", "null"] }, "data_dir": { "type": "string" },
+        "started_at": { "type": "number" }, "stopped_at": { "type": ["number", "null"] },
+        "trap_marks": { "type": ["integer", "null"], "description": "罠の CUA_DRIVER_BIN が呼ばれた回数（stop で数える）" },
+        "cua_children_of_shibubu": { "type": ["integer", "null"] },
+        "owner_pid": { "type": ["integer", "null"], "description": "起動の前の前面の pid。毎手と run 全体の judge に --owner で渡す（null は no_owner_front の未測）" },
+        "ok": { "type": ["boolean", "null"], "description": "stop の後だけ。全手の verdict.ok かつ run 全体の steps/zz-run.verdict.json の ok かつ trap_marks = 0 かつ cua_children_of_shibubu = 0" },
+        "scene": { "enum": ["normal_low", "normal_load", "fullscreen", "split_view", null],
+                   "description": "W12W-1c: この run の場（SHIBUBU_QA_SCENE・無ければ null）。normal_low = 普通の Space・run.sh load を使わない / normal_load = 普通の Space・run.sh load の窓が在る / fullscreen・split_view = その Space で回す（operator が run の前に作り後で戻す・owner が居ない時だけ）。宣言が手の axprobe の space と load の窓に合うかは tally.py の scene_held" },
+        "owner_idle_s": { "type": ["number", "null"], "description": "W12W-1c: start が起こす前に 1 回だけ読んだ IOHIDSystem の HIDIdleTime（秒）。読めなければ null。この欄の無い run.json（前の版）は owner の判定をしない" },
+        "owner_active": { "type": "boolean", "description": "W12W-1c: owner_idle_s が 120（run.sh の OWNER_IDLE_MIN_S）未満か null = owner が使用中（居ないと言えない）。null は持たない（読めない時は true）。true の run は起こさず ok=false（待たない）・tally の unmeasured.owner_active" }
+      }
+    },
+    "load": {
+      "type": "object",
+      "required": ["schema", "t0", "t1", "seconds", "procs", "pids"],
+      "description": "W12W-1c: run.sh load が R/load.jsonl に足す 1 行（試験の側が自分の process で作った CPU の負荷の窓）。pids は自分で起こした busy loop（argv に shibubu-qa-load）だけで、各々が t0〜t1 の間は回り t1 の後 1 秒以内に自分で終わる（stop は残っている物だけ kill）",
+      "properties": {
+        "schema": { "const": "shibubu.qa.load/1" }, "t0": { "type": "number" }, "t1": { "type": "number", "description": "t0 + seconds（予定の終わり）" },
+        "seconds": { "type": "integer", "minimum": 1, "maximum": 600 }, "procs": { "type": "integer", "minimum": 1, "maximum": 32 },
+        "pids": { "type": "array", "items": { "type": "integer" } }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["schema", "step", "tool", "rc", "t0", "t1", "verdict"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.step/1" }, "step": { "type": "string" }, "tool": { "type": "string" },
+        "args": { "type": "object", "description": "cua-driver に渡した JSON（text は打つ文字そのもの・試験の文字だけを打つ）" },
+        "rc": { "type": "integer" }, "t0": { "type": "number" }, "t1": { "type": "number" },
+        "load1": { "type": ["number", "null"], "description": "W15-b1: 手を打つ前の 1 分 load（sysctl vm.loadavg）。tally.py の CONGESTED_LOAD1（16 = 論理 CPU 8 の 2 倍）を超えた手は congested と印を付け、W15 の 90 秒の判定から除く。読めなければ null（混雑でない側に倒さず『混雑』にも数えない）" },
+        "needle": { "type": ["string", "null"] }, "expect": { "type": ["string", "null"], "description": "L2 の期待する効果 \"<kind>:<target>\"（kind = ax | ui_state | oracle | refused・tally.py の parse_expect が正）" },
+        "shot": { "type": ["string", "null"], "description": "run-dir からの相対 path" },
+        "axprobe": { "type": ["string", "null"], "description": "W12W-1c: run-dir からの相対 path（shibubu.qa.axprobe/1）。無い手は cause_of で no_probe" },
+        "verdict": { "type": "string", "description": "run-dir からの相対 path（shibubu.qa.verdict/1）" }
+      }
+    },
+    "github": {
+      "type": "object",
+      "required": ["schema", "t", "repo", "issue", "nonce", "comments", "has_nonce"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.github/1" }, "t": { "type": "number" }, "repo": { "type": "string" }, "issue": { "type": "integer" }, "nonce": { "type": "string" },
+        "comments": { "type": "array", "items": { "type": "object", "required": ["id", "created_at", "body_sha256", "has_nonce"], "properties": { "id": { "type": "integer" }, "created_at": { "type": "string" }, "body_sha256": { "type": "string" }, "has_nonce": { "type": "boolean" } } } },
+        "has_nonce": { "type": "boolean" }
+      }
+    },
+    "axwindows": {
+      "type": "object",
+      "description": "W2b-AX: front-guard ax-windows / ax-sample の 1 行。state は classifyAxWindows（cg_onscreen=0→no_window / err=-25204→unresponsive / err≠0→error / count=0→detached / 他 attached）",
+      "required": ["schema", "t", "pid", "variant", "count", "err", "secs", "cg_onscreen", "load1", "state"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.axwindows/1" }, "t": { "type": "number" }, "pid": { "type": "integer" }, "variant": { "type": ["string", "null"] },
+        "count": { "type": ["integer", "null"] }, "err": { "type": "integer", "description": "AXError の生の値（0 = success）" }, "secs": { "type": "number" },
+        "cg_onscreen": { "type": "integer" }, "load1": { "type": ["number", "null"] },
+        "state": { "enum": ["attached", "detached", "unresponsive", "error", "no_window"] }
+      }
+    },
+    "axwindows_verdict": {
+      "type": "object",
+      "description": "W2b-AX: front-guard ax-judge。exit 0 ok / 1 detached あり / 6 unresponsive だけ。ok = detached 0・unresponsive 0・samples > 0",
+      "required": ["schema", "samples", "by_state", "first_detached", "ok"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.axwindows-verdict/1" }, "samples": { "type": "integer" },
+        "by_state": { "type": "object", "propertyNames": { "enum": ["attached", "detached", "unresponsive", "error", "no_window"] }, "additionalProperties": { "type": "integer" } },
+        "first_detached": { "type": ["number", "null"] }, "ok": { "type": "boolean" }
+      }
+    },
+    "uistate": {
+      "type": "object",
+      "required": ["schema", "t", "db", "needle", "rows", "has_needle"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.uistate/1" }, "t": { "type": "number" }, "db": { "type": "string" }, "needle": { "type": ["string", "null"] },
+        "rows": { "type": "array", "items": { "type": "object", "required": ["session_id", "key", "updated_at", "json_sha256", "has_needle"], "properties": { "session_id": { "type": "string" }, "key": { "type": "string" }, "updated_at": { "type": "string" }, "json_sha256": { "type": "string" }, "has_needle": { "type": "boolean" } } } },
+        "has_needle": { "type": "boolean", "description": "needle が null なら false" }
+      }
+    },
+    "a1": {
+      "description": "W16-2: oracle/a1 が A1 の手 1 つに 1 件書く（R/oracle/a1.json）。正は試験の側（disk の sha と中身・試験の側が TextEdit の AX で特定した編集した窓・oracle/windows sample の標本・Shibubu の窓の AX の surface-frame:<id> の rect）。製品の overlay.jsonl は照合の相手（overlay_match）で、記録だけでは数えない。tally の A1 = sha_changed・has_nonce・route_ok・overlay_match が全部 true",
+      "type": "object",
+      "required": ["schema", "t", "file", "nonce", "sha_before", "sha_after", "sha_changed", "has_nonce", "edited", "shibubu_pid", "frame", "samples", "misses", "route_ok", "overlay_match"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.a1/1" }, "t": { "type": "number" },
+        "file": { "type": "string", "description": "試験の repo の中の相対 path（README.md）" }, "nonce": { "type": "string" },
+        "sha_before": { "type": ["string", "null"], "description": "編集の手の前の disk の sha256（読めなければ null で、sha_changed は false）" },
+        "sha_after": { "type": ["string", "null"] }, "sha_changed": { "type": "boolean" },
+        "has_nonce": { "type": "boolean", "description": "保存の後の disk の中身に nonce が在る（中身そのものは evidence に書かない）" },
+        "edited": { "oneOf": [{ "type": "null" }, { "type": "object", "required": ["pid", "window_id"], "properties": { "pid": { "type": "integer" }, "window_id": { "type": "integer" } } }], "description": "試験の側が AXFocusedWindow の _AXWindowNumber と pid で特定した編集した窓（特定できなければ null で、route_ok は false）" },
+        "shibubu_pid": { "type": "integer" },
+        "frame": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/rect" }], "description": "Shibubu の窓の AX の surface-frame:<id> の rect（global の point・Retina の倍率なし・D1 と同じ）" },
+        "samples": { "type": "integer", "description": "編集の手の始めから保存の終わりまでの標本の数（oracle/windows sample・200ms ごと・0 なら route_ok は false）" },
+        "misses": { "type": "array", "description": "外れた標本（onscreen でない・bounds と frame の誤差 > 1pt・Shibubu の窓の直上でない・編集した窓が標本に無い）", "items": { "type": "object", "required": ["t", "why"], "properties": { "t": { "type": "number" }, "why": { "enum": ["offscreen", "bounds", "not_above_shibubu", "no_window"] } } } },
+        "route_ok": { "type": "boolean", "description": "samples > 0・misses が 0 件・edited と frame が null でない" },
+        "overlay_match": { "type": "boolean", "description": "編集の間の overlay.jsonl の最後の event が attached か host_shown で、その pid と window_id が edited と同じ（host_hidden・記録無し・食い違いは false = L1）" }
+      }
+    },
+    "repo": {
+      "type": "object",
+      "required": ["schema", "t", "repo", "mirror", "path", "tag", "head_sha", "clean"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.repo/1" }, "t": { "type": "number" }, "repo": { "type": "string", "description": "owner/name（origin が init の時は \"local\"）" },
+        "mirror": { "type": "string", "description": "origin が init の時は \"\"（mirror を使っていない）" }, "path": { "type": "string" }, "tag": { "const": "yc-initial" },
+        "head_sha": { "type": "string" }, "clean": { "type": "boolean" },
+        "origin": { "enum": ["mirror", "init"], "description": "run の clone の作り方。無ければ mirror。init = mirror を使わず run の dir に git init と README の commit で作った（W12a・fresh-repo.sh init）" }
+      }
+    },
+    "git": {
+      "type": "object",
+      "required": ["schema", "t", "path", "head_sha", "branch", "changes"],
+      "description": "oracle/git.sh read（W12a）。試験の道具の shell の git で読んだ run の clone の状態。製品の adapters::git::RepoStatus と同じ 3 つの読み",
+      "properties": {
+        "schema": { "const": "shibubu.qa.git/1" }, "t": { "type": "number" }, "path": { "type": "string" },
+        "head_sha": { "type": ["string", "null"], "description": "rev-parse HEAD の 40 桁。commit が無ければ null" },
+        "branch": { "type": ["string", "null"], "description": "branch --show-current。detached HEAD なら null" },
+        "changes": { "type": "array", "items": { "type": "object", "required": ["status", "path"], "properties": {
+          "status": { "type": "string", "description": "status --porcelain=v1 -z の XY の 2 字そのまま" },
+          "path": { "type": "string", "description": "引用符を外した生の path（repo の root から）" },
+          "orig_path": { "type": "string", "description": "rename / copy の元の path（その時だけ）" } } } }
+      }
+    },
+    "excalidraw": {
+      "type": "object",
+      "required": ["schema", "t", "path", "exists", "sha256", "elements", "nonces"],
+      "description": "oracle/excalidraw.sh read（W12W-2 の B1・B3）。run の clone の Excalidraw の file を disk から読んだ物。WebView・localStorage・製品の evaluate は読まない",
+      "properties": {
+        "schema": { "const": "shibubu.qa.excalidraw/1" }, "t": { "type": "number" }, "path": { "type": "string" },
+        "exists": { "type": "boolean", "description": "普通の file として在る。false なら sha256 と elements は null・nonces は全部 false" },
+        "sha256": { "type": ["string", "null"], "description": "file の byte の sha256（16 進 64 桁）" },
+        "elements": { "type": ["integer", "null"], "minimum": 0, "description": "elements[] のうち isDeleted が true でない要素の数" },
+        "nonces": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "boolean" }, "description": "引数の nonce → isDeleted でない要素の text か originalText に在る" }
+      }
+    },
+    "tally": {
+      "type": "object",
+      "required": ["schema", "native_verified", "web_verified", "service_verified", "terminal_real", "local_only", "claimed_connected", "claimed_unverified", "lies", "dead_clicks", "guard_failures", "unmeasured"],
+      "properties": {
+        "schema": { "const": "shibubu.qa.tally/1" },
+        "native_verified": { "type": "integer" }, "web_verified": { "type": "integer" }, "service_verified": { "type": "integer" },
+        "terminal_real": { "type": "integer" }, "local_only": { "type": "integer" }, "claimed_connected": { "type": "integer" }, "claimed_unverified": { "type": "integer" },
+        "lies": { "type": "array", "items": { "type": "object", "required": ["step", "element", "word"] } },
+        "dead_clicks": { "type": "array", "items": { "type": "object", "required": ["step", "expect"] } },
+        "guard_failures": { "type": "array", "items": { "type": "string" } },
+        "cua_frontmost": { "type": "array", "items": { "type": "string" }, "description": "cua-driver の応答に frontmost があった手（1 件でも run は失敗）" },
+        "causes": { "type": "array", "items": { "$ref": "#/$defs/cause" }, "description": "W12W-1c: 手ごとの切り分け（steps.jsonl の順）" },
+        "scene": { "enum": ["normal_low", "normal_load", "fullscreen", "split_view", null], "description": "W12W-1c: run.json の scene をそのまま" },
+        "scene_held": { "type": ["boolean", "null"], "description": "W12W-1c: tally.py の scene_held（宣言した場が手の axprobe の space と load の窓に合う）。null = 測れない（scene 無し・probe 無し・space が unknown の手が在る）" },
+        "self_load": { "type": "array", "items": { "$ref": "#/$defs/load" }, "description": "W12W-1c: R/load.jsonl の行（自分で作った負荷の窓・t0 の順）" },
+        "unmeasured": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    }
+  }
+}

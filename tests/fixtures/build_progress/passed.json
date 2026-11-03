@@ -1,0 +1,84 @@
+{
+ "goal": "REAPER に録音した音を入れて",
+ "passed": true,
+ "stop": "passed",
+ "remaining": [],
+ "decisions": [
+  {
+   "software": "REAPER",
+   "action_id": "reaper.insert_media",
+   "node_key": "reaper-insert-media",
+   "chosen": "local",
+   "why": "local（reaper.cli）: wav を REAPER の track に入れる（InsertMedia）。要る物を確かめるまで requires_connection",
+   "excluded": [],
+   "fallback": "native_handoff（reaper.app）",
+   "basis": null,
+   "needs": [
+    "state:REAPER が起動中",
+    "decision:insert ごとに承認（external_write）"
+   ]
+  }
+ ],
+ "codegen": [],
+ "app": {
+  "id": "reaper",
+  "title": "REAPER に録音した音"
+ },
+ "loss": 0,
+ "elapsed_ms": 98765,
+ "trace": [
+  {
+   "round": 0,
+   "layer": "compose",
+   "change": "composer::compose",
+   "loss": 90,
+   "accepted": true,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 0,
+   "layer": "plan",
+   "change": "Integration Planner",
+   "loss": null,
+   "accepted": false,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 1,
+   "layer": "reading",
+   "change": "候補",
+   "loss": 52,
+   "accepted": true,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 2,
+   "layer": "strategy",
+   "change": "候補",
+   "loss": 37,
+   "accepted": true,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 3,
+   "layer": "app",
+   "change": "候補",
+   "loss": 41,
+   "accepted": false,
+   "reason": "",
+   "dry_run": []
+  }
+ ],
+ "target": [
+  {
+   "id": "t1",
+   "word": "未読",
+   "kind": "view"
+  }
+ ],
+ "software": []
+}

@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "id": "video-code-notes",
+  "name": "動画を見ながらコードを確認",
+  "purpose": "動画再生に必要な操作とIDEの関連コード操作だけをひとつの作業面にまとめる",
+  "sources": [
+    {"id": "video-browser", "name": "Browser video player", "kind": "cua"},
+    {"id": "ide-editor", "name": "IDE", "kind": "cua"}
+  ],
+  "capabilities": [
+    {"id": "observe-player", "source_id": "video-browser", "name": "再生状態を確認", "kind": "read", "requires_confirmation": false, "verify_as": "read_back"},
+    {"id": "toggle-player", "source_id": "video-browser", "name": "再生/一時停止", "kind": "execute", "requires_confirmation": false, "verify_as": "state_compare"},
+    {"id": "observe-editor", "source_id": "ide-editor", "name": "開いているファイルを確認", "kind": "read", "requires_confirmation": false, "verify_as": "read_back"},
+    {"id": "open-related-code", "source_id": "ide-editor", "name": "関連ファイルを開く", "kind": "execute", "requires_confirmation": true, "verify_as": "state_compare"}
+  ],
+  "datasets": [
+    {"id": "playback", "produced_by": "observe-player", "record_key": "player_instance_id"},
+    {"id": "editor-files", "produced_by": "observe-editor", "record_key": "file_id"}
+  ],
+  "view": {
+    "pattern": "media_workspace",
+    "regions": [
+      {"key": "video-primary", "role": "primary", "components": [
+        {"key": "video-playback", "kind": "media_controls", "label": "動画を再生・停止", "importance": "primary", "action_id": "toggle-player"},
+        {"key": "video-status", "kind": "detail", "label": "現在の再生位置", "importance": "supporting", "dataset_id": "playback"}
+      ]},
+      {"key": "related-code", "role": "context", "components": [
+        {"key": "related-files", "kind": "list", "label": "関連コード", "importance": "secondary", "dataset_id": "editor-files"},
+        {"key": "open-ide-file", "kind": "button", "label": "関連ファイルを開く", "importance": "primary", "action_id": "open-related-code", "visible_in": ["selected", "completed"]}
+      ]}
+    ]
+  },
+  "workflows": []
+}

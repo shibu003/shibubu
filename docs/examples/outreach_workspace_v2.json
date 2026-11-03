@@ -1,0 +1,40 @@
+{
+  "schema_version": "2.0",
+  "id": "outreach-studio-v2",
+  "name": "Outreach Studio",
+  "purpose": "許可された企業と公開連絡先を整理し、個別メール草案を確認してから送信し、返信を追跡する",
+  "sources": [
+    {"id": "contact-source", "display_name": "Permitted contact source", "adapter_kind": "api"},
+    {"id": "gmail-source", "display_name": "Gmail", "adapter_kind": "api"}
+  ],
+  "capabilities": [
+    {"id": "get-contacts", "source_id": "contact-source", "catalog_ref": "contacts.records.list", "effect": "read", "verification": "read_back", "approval": "none"},
+    {"id": "create-draft", "source_id": "gmail-source", "catalog_ref": "gmail.drafts.create", "effect": "external_write", "verification": "read_back", "approval": "runtime_policy"},
+    {"id": "send-approved", "source_id": "gmail-source", "catalog_ref": "gmail.messages.send", "effect": "external_write", "verification": "read_back", "approval": "always"}
+  ],
+  "entities": [
+    {"id": "people", "identity_key": "contact_id", "fields": [{"name": "display_name", "type": "string"}, {"name": "role", "type": "string"}, {"name": "source", "type": "url"}]},
+    {"id": "drafts", "identity_key": "draft_id", "fields": [{"name": "to", "type": "string"}, {"name": "subject", "type": "string"}, {"name": "body", "type": "string"}]}
+  ],
+  "actions": [
+    {"id": "refresh-contacts", "capability_id": "get-contacts", "target_entity_id": "people"},
+    {"id": "save-draft", "capability_id": "create-draft", "target_entity_id": "drafts"},
+    {"id": "send-draft", "capability_id": "send-approved", "target_entity_id": "drafts"}
+  ],
+  "views": [
+    {"id": "search-and-draft", "label": "リードと下書き", "root": {
+      "key": "outreach-root", "type_id": "layout.stack", "label": "Outreach", "children": [
+        {"key": "outreach-head", "type_id": "ui.toolbar", "label": "検索と絞り込み"},
+        {"key": "outreach-split", "type_id": "layout.split", "label": "リストと詳細", "children": [
+          {"key": "people-list", "type_id": "ui.table", "label": "公開連絡先", "role": "primary", "priority": "primary", "data_ref": "people"},
+          {"key": "contact-and-draft", "type_id": "layout.stack", "label": "選択した連絡先", "role": "context", "children": [
+            {"key": "selected-person", "type_id": "ui.detail", "label": "連絡先", "data_ref": "people", "when": {"state_key": "has_selection", "equals": true}},
+            {"key": "draft-editor", "type_id": "ui.form", "label": "メール草案", "data_ref": "drafts", "action_ref": "save-draft"},
+            {"key": "send-with-confirmation", "type_id": "ui.button", "label": "内容を確認して送信", "priority": "primary", "action_ref": "send-draft"}
+          ]}
+        ]}
+      ]
+    }}
+  ],
+  "workflows": [{"id": "draft-workflow", "label": "個別メール作成", "trigger": "manual", "steps": [{"id": "step-save", "action_id": "save-draft", "after": []}, {"id": "step-send", "action_id": "send-draft", "after": ["step-save"]}]}]
+}

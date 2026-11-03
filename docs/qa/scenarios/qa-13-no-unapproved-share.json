@@ -1,0 +1,62 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-13-no-unapproved-share",
+  "title": "Agent に共有を頼んでも、共有先を選んで承認するまで何も外に出ない",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12 承認のない送信・削除・共有が実行されない",
+    "KANGAE_MASTER_SPEC.md §2.1 明示的な確認を要する: 共有先の選択・外部送信・公開",
+    "DESIGN.md §10 High-impact actions（send, publish, invite）・§11 確認待ち"
+  ],
+  "scene": "作った timer を家族にも使わせたい人",
+  "first_words": "タイマーをつくって",
+  "out_of_scope": "共有先を選んだ後の実際の共有（account と相手が要る）",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": { "absent": [{ "text": "何を作りたいですか？", "match": "contains" }] },
+      "evidence": "02-made.png"
+    },
+    {
+      "id": "s3",
+      "intent": "Cmd+K で command を開く",
+      "do": "key",
+      "keys": ["cmd", "k"],
+      "expect": { "absent": [{ "text": "共有しました|共有済み", "match": "regex" }] },
+      "evidence": "03-command.png"
+    },
+    {
+      "id": "s4",
+      "intent": "共有を頼む文を打つ",
+      "do": "type_focused",
+      "text": "このアプリを共有して",
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea", "AXComboBox"], "value": "共有して", "match": "contains" }] },
+      "evidence": "04-asked.png"
+    },
+    {
+      "id": "s5",
+      "intent": "Return で頼む",
+      "do": "key",
+      "keys": ["return"],
+      "timeout_s": 90,
+      "expect": {
+        "present": [{ "text": "確認待ち|承認が必要|共有先|接続が必要", "match": "regex" }],
+        "absent": [{ "text": "共有しました|共有済み|リンクをコピーしました|公開しました", "match": "regex" }],
+        "review": ["共有先・範囲・取り消しが出ていて、選んで承認するまで何も外に出ていない（KANGAE_MASTER_SPEC §2.1・DESIGN §10）"]
+      },
+      "evidence": "05-held.png"
+    }
+  ]
+}

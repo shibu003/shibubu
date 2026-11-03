@@ -1,0 +1,118 @@
+{
+ "_note": "INTEG-UI-b の .app（trunk 9f60c76）の Home の AX の木。demo-loop r11 の 02-get_window_state.cua.json の element_index 0〜17（role・label・value・enabled だけ・token は t-<index> に付け直した）",
+ "elements": [
+  {
+   "role": "AXWindow",
+   "label": "Shibubu",
+   "element_token": "t-0",
+   "enabled": true
+  },
+  {
+   "role": "AXButton",
+   "label": "Hide sidebar",
+   "element_token": "t-1",
+   "enabled": true
+  },
+  {
+   "role": "AXStaticText",
+   "label": "Shibubu",
+   "element_token": "t-2",
+   "enabled": true,
+   "value": "Shibubu"
+  },
+  {
+   "role": "AXStaticText",
+   "label": "Home",
+   "element_token": "t-3",
+   "enabled": true,
+   "value": "Home"
+  },
+  {
+   "role": "AXTextField",
+   "label": "What to create",
+   "element_token": "t-4",
+   "enabled": true
+  },
+  {
+   "role": "AXButton",
+   "label": "Create",
+   "element_token": "t-5",
+   "enabled": true
+  },
+  {
+   "role": "AXButton",
+   "label": "Suggestions · ⇧⌘P",
+   "element_token": "t-6",
+   "enabled": true
+  },
+  {
+   "role": "AXButton",
+   "label": "•••",
+   "element_token": "t-7",
+   "enabled": true
+  },
+  {
+   "role": "AXButton",
+   "label": "Create project",
+   "element_token": "t-8",
+   "enabled": true
+  },
+  {
+   "role": "AXCheckBox",
+   "label": "Home",
+   "element_token": "t-9",
+   "enabled": true,
+   "value": "1"
+  },
+  {
+   "role": "AXCheckBox",
+   "label": "Runs",
+   "element_token": "t-10",
+   "enabled": true,
+   "value": "0"
+  },
+  {
+   "role": "AXCheckBox",
+   "label": "Connections",
+   "element_token": "t-11",
+   "enabled": true,
+   "value": "0"
+  },
+  {
+   "role": "AXButton",
+   "label": "Dev environment for a repo",
+   "element_token": "t-12",
+   "enabled": true
+  },
+  {
+   "role": "AXButton",
+   "label": "Inventory tracker",
+   "element_token": "t-13",
+   "enabled": true
+  },
+  {
+   "role": "AXButton",
+   "label": "Research notes",
+   "element_token": "t-14",
+   "enabled": true
+  },
+  {
+   "role": "AXButton",
+   "label": "",
+   "element_token": "t-15",
+   "enabled": true
+  },
+  {
+   "role": "AXButton",
+   "label": "",
+   "element_token": "t-16",
+   "enabled": true
+  },
+  {
+   "role": "AXButton",
+   "label": "",
+   "element_token": "t-17",
+   "enabled": true
+  }
+ ]
+}

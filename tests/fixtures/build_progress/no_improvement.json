@@ -1,0 +1,115 @@
+{
+ "goal": "Gmail の未読を Slack に送って",
+ "passed": false,
+ "stop": "no_improvement",
+ "remaining": [
+  "Marketing copy rules [dekimasu]: 下の入力から直接頼めます（hero_a）",
+  "No loading skeleton: list_a",
+  "No loading skeleton: list_b",
+  "「未読」の一覧が無い",
+  "Connection not named: Slack",
+  "Part not requested: 説明文だけの部品"
+ ],
+ "decisions": [
+  {
+   "software": "Gmail",
+   "action_id": "gmail.mail.read",
+   "node_key": "gmail-read",
+   "chosen": "api",
+   "why": "api（gmail.api）: thread と返信（件数・差出人・本文）を読む。要る物を確かめるまで requires_connection",
+   "excluded": [
+    {
+     "method": "web（gmail.web）",
+     "reason": "api（gmail.api） を先に使う"
+    }
+   ],
+   "fallback": "web（gmail.web）",
+   "basis": {
+    "kind": "documented",
+    "source": "docs/registry/software/gmail.json の thread.read",
+    "checked_at": null
+   },
+   "needs": [
+    "oauth_scope:https://www.googleapis.com/auth/gmail.readonly",
+    "entitlement:google.oauth_client"
+   ]
+  },
+  {
+   "software": "Slack",
+   "action_id": "slack.messages.send",
+   "node_key": "slack-send",
+   "chosen": "api",
+   "why": "api（slack.web_api）: channel・DM に投稿する。要る物を確かめるまで requires_connection",
+   "excluded": [],
+   "fallback": "native_handoff（slack.deeplink）",
+   "basis": null,
+   "needs": [
+    "oauth_scope:chat:write",
+    "entitlement:slack.app",
+    "decision:送る前に承認"
+   ]
+  }
+ ],
+ "codegen": [],
+ "app": {
+  "id": "gmail-slack",
+  "title": "Gmail の未読"
+ },
+ "loss": 37,
+ "elapsed_ms": 98765,
+ "trace": [
+  {
+   "round": 0,
+   "layer": "compose",
+   "change": "composer::compose",
+   "loss": 90,
+   "accepted": true,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 0,
+   "layer": "plan",
+   "change": "Integration Planner",
+   "loss": null,
+   "accepted": false,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 1,
+   "layer": "reading",
+   "change": "候補",
+   "loss": 52,
+   "accepted": true,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 2,
+   "layer": "strategy",
+   "change": "候補",
+   "loss": 37,
+   "accepted": true,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 3,
+   "layer": "app",
+   "change": "候補",
+   "loss": 41,
+   "accepted": false,
+   "reason": "",
+   "dry_run": []
+  }
+ ],
+ "target": [
+  {
+   "id": "t1",
+   "word": "未読",
+   "kind": "view"
+  }
+ ],
+ "software": []
+}

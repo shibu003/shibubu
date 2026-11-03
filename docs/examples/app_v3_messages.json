@@ -1,0 +1,87 @@
+{
+  "schema_version": "3.0",
+  "id": "example.messages",
+  "version": 1,
+  "title": "Conversation Workspace",
+  "goal": {
+    "literal_goal": "メッセージをまとめたい",
+    "outcomes": [
+      "メッセージをまとめたい"
+    ],
+    "assumptions": [
+      "このプレビューで外部アカウントには接続しない"
+    ],
+    "constraints": [
+      "ユーザーの承認なく外部データにアクセスしない"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "message-root",
+      "component": "column",
+      "props": {},
+      "children": [
+        {
+          "key": "connect-hint",
+          "component": "text",
+          "props": {
+            "text": "どのアカウントを統合するか選択してください。"
+          }
+        },
+        {
+          "key": "message-list",
+          "component": "list",
+          "props": {
+            "readiness": "requires_connection"
+          },
+          "binding": {
+            "source_ref": "optional.messages",
+            "path": "threads"
+          }
+        },
+        {
+          "key": "connect-button",
+          "component": "button",
+          "props": {
+            "label": "接続方法を見る"
+          },
+          "action_ref": "local.connection.open"
+        }
+      ]
+    },
+    "view_modes": [
+      "use",
+      "build",
+      "review"
+    ]
+  },
+  "actions": [
+    {
+      "id": "local.connection.open",
+      "effect": "local_write",
+      "readiness": "preview_only",
+      "input_schema": {
+        "type": "object"
+      },
+      "required_scopes": [],
+      "requires_approval": false
+    }
+  ],
+  "sources": [
+    {
+      "id": "optional.messages",
+      "kind": "external_optional",
+      "readiness": "requires_connection"
+    }
+  ],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail"
+  },
+  "state": {
+    "readiness": "partial",
+    "execution_mode": "local_demo",
+    "status_message": "設計サンプル。実データは接続しない。"
+  }
+}

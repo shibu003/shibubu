@@ -1,0 +1,90 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-17-proposal-rail",
+  "title": "提案はいつでも 1 手で開ける・根拠の無い提案を作らない・出すのは 3 件まで",
+  "sources": [
+    "DESIGN.md §5.1 ✦ 提案（次にできること・このアプリについて・実行履歴・at most 3）・§11 今のところ新しい提案はありません・§12.3 Proposal tests・§9 Cmd/Ctrl+Shift+P",
+    "KANGAE_MASTER_SPEC.md §7.1 根拠のない「AIが何か提案したい」は禁止"
+  ],
+  "scene": "Kangae を開いたばかりの人が、何を頼めるのか覗いてみる",
+  "first_words": "タイマーをつくって",
+  "out_of_scope": "提案の適用・却下・後で（qa-08 が適用と Undo を見る）",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home で ✦ 提案 が見えているか",
+      "do": "observe",
+      "expect": {
+        "present": [{ "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" }],
+        "absent": [{ "text": "次にできること", "match": "contains" }]
+      },
+      "evidence": "01-home.png",
+      "note": "rail は新しい人には閉じている前提（DESIGN §1.1）。✦ は icon なので、釦の名前は「提案」で始まる物を探す（§5.1・§9）"
+    },
+    {
+      "id": "s2",
+      "intent": "✦ 提案 を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" },
+      "expect": {
+        "present": [
+          { "text": "次にできること", "match": "contains" },
+          { "text": "今のところ新しい提案はありません", "match": "contains" },
+          { "role": "AXButton", "text": "プレビュー|適用", "match": "regex", "min": 0, "max": 3 }
+        ]
+      },
+      "evidence": "02-rail-empty.png",
+      "note": "まだ何もしていない人に、根拠の無い提案を並べない"
+    },
+    {
+      "id": "s3",
+      "intent": "Cmd+Shift+P で閉じる",
+      "do": "key",
+      "keys": ["cmd", "shift", "p"],
+      "expect": {
+        "present": [{ "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" }],
+        "absent": [{ "text": "次にできること", "match": "contains" }]
+      },
+      "evidence": "03-closed.png"
+    },
+    {
+      "id": "s4",
+      "intent": "Cmd+Shift+P でもう一度開く",
+      "do": "key",
+      "keys": ["cmd", "shift", "p"],
+      "expect": { "present": [{ "text": "次にできること", "match": "contains" }] },
+      "evidence": "04-reopened.png"
+    },
+    {
+      "id": "s5",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "05-typed.png"
+    },
+    {
+      "id": "s6",
+      "intent": "「作る」を押し、app の画面でも rail を見る",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "present": [
+          { "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" },
+          { "text": "このアプリについて", "match": "contains" },
+          { "text": "実行履歴", "match": "contains" },
+          { "role": "AXButton", "text": "プレビュー|適用", "match": "regex", "min": 0, "max": 3 }
+        ],
+        "absent": [{ "text": "何を作りたいですか？", "match": "contains" }],
+        "review": [
+          "提案の行は 14px の題・12px の説明 1〜2 行・文脈の label・[プレビュー] か [適用] と overflow の 後で / 非表示（DESIGN §5.2）",
+          "提案の数の点は点滅しない・音も出ない（DESIGN §5.1）"
+        ]
+      },
+      "evidence": "06-rail-app.png",
+      "note": "rail は開いたまま app の画面に移る前提（DESIGN §1.2 Switching apps preserves …）"
+    }
+  ]
+}

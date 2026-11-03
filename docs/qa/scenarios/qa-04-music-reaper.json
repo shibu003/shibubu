@@ -1,0 +1,102 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-04-music-reaper",
+  "title": "「音楽制作」→ 鼻歌を録って REAPER に本当に取り込む",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12「音楽制作」→録音→REAPERに本当に取り込み・§7 M6",
+    "KANGAE_MASTER_SPEC.md §11.3 真に動作する縦断テスト・§15 UC-09",
+    "docs/MUSIC_WORKSPACE_CASE_STUDY.md §3 状態・エラー・§6 音声の保存と転送・§8 最小受け入れシナリオ 3〜5"
+  ],
+  "scene": "曲を作る人。思い付いた旋律を鼻歌で録って、DAW の REAPER に入れたい",
+  "first_words": "鼻歌を録って REAPER に入れたい",
+  "out_of_scope": "Apple Music / YouTube（qa-21）・BPM やコードの提案・REAPER の中の編集",
+  "preconditions": [
+    "QA 機で、Kangae を起こす terminal に mic の許可を出しておく（初回の許可 dialog は Kangae の窓の外に出る）",
+    "REAPER で test 用の空の project を開いておく（本番の project を開かない）"
+  ],
+  "requires_apps": ["/Applications/REAPER.app"],
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "present": [
+          { "role": "AXButton", "label": "録音", "match": "contains" },
+          { "text": "REAPER", "match": "contains" }
+        ],
+        "absent": [{ "text": "取り込みました|追加しました|verified", "match": "regex" }],
+        "review": ["REAPER の状態（未起動 / 手動で開く / ready）が文字で出ていて、偽の REAPER 画面で埋めていない（DESIGN §14.2・§14.3）"]
+      },
+      "evidence": "02-workspace.png"
+    },
+    {
+      "id": "s3",
+      "intent": "録音を押して 3 秒鼻歌を入れる",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "録音", "match": "contains" },
+      "settle_s": 3,
+      "expect": {
+        "present": [{ "role": "AXButton", "label": "停止", "match": "contains" }],
+        "review": ["録音中の表示（経過時間か音量）が文字で出ている（ACCEPTANCE test3 録音 card）"]
+      },
+      "evidence": "03-recording.png",
+      "note": "mic の許可が無い機械では「録音権限なし」の案内が出てここが FAIL になる（前提を見る）"
+    },
+    {
+      "id": "s4",
+      "intent": "停止を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "停止", "match": "contains" },
+      "settle_s": 1,
+      "timeout_s": 20,
+      "expect": {
+        "present": [
+          { "role": "AXButton", "label": "試聴", "match": "contains" },
+          { "role": "AXButton", "label": "Add to REAPER", "match": "contains" }
+        ],
+        "review": ["録った take が 1 つ出ている（WAV で保存済み・§6）"]
+      },
+      "evidence": "04-take.png"
+    },
+    {
+      "id": "s5",
+      "intent": "Add to REAPER を押す（承認の画面が出るはず）",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "Add to REAPER", "match": "contains" },
+      "high_impact": "review_only",
+      "timeout_s": 20,
+      "expect": {
+        "present": [{ "text": "確認待ち", "match": "contains" }, { "text": "REAPER", "match": "contains" }],
+        "absent": [{ "text": "取り込みました|追加しました|verified", "match": "regex" }],
+        "review": ["確認待ちに取り込み先の project・track・取り消しの可否が出ている（DESIGN §10）"]
+      },
+      "evidence": "05-review.png"
+    },
+    {
+      "id": "s6",
+      "intent": "人が取り込み先を確かめて承認し、REAPER に入ったか見る",
+      "do": "operator",
+      "instruction": "確認待ちの取り込み先が test 用の project である事を確かめ、承認を押す（runner は承認を押さない）",
+      "timeout_s": 60,
+      "expect": {
+        "present": [{ "text": "確認済み|検証済み|verified", "match": "regex" }],
+        "absent": [{ "text": "確認待ち", "match": "contains" }],
+        "review": ["REAPER の project に track か item が 1 つ増え、録った WAV が入っている（REAPER の画面で見る・UC-09）"]
+      },
+      "evidence": "06-imported.png",
+      "note": "成功の表示は verified の時だけ（DESIGN §4.5）。取り込みに失敗しても録った音は消えず、再試行 / ファイルを書き出すが出る（case study §3）"
+    }
+  ]
+}

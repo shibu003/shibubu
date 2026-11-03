@@ -1,0 +1,90 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-23-skeleton-loading",
+  "title": "起動・画面の切替・生成・開き直しの待ちに、白紙や spinner ではなく画面の形の skeleton が出る",
+  "sources": [
+    "DESIGN.md §15.2-2 全画面の skeleton loading（起動直後・View の切替・app を開く時・生成中・data の取得中。120ms 未満なら描かない。§7 の 250ms を上書き）",
+    "DESIGN.md §15.2-4 data を持つ region は loading の skeleton を持って渡す・§5 understanding = Work skeleton, not fake populated records",
+    "DESIGN.md §15.3 機能ごとに .app の上で cua の AX 経路で通し、写真を残す"
+  ],
+  "scene": "初めて Kangae を開いた人。起動・画面の切替・app の生成を待つ間、何が来るのかを画面の形で先に見たい",
+  "first_words": "タイマーをつくって",
+  "out_of_scope": "shimmer の速さ（1.2s）と cross-fade の時間の数値（写真の間隔では測れない）・data の取得中（接続が要る: qa-05・qa-20）・reduce motion（qa-24）",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Kangae を閉じて開き直し、起動直後を連続で撮る",
+      "do": "restart",
+      "burst": 5,
+      "timeout_s": 30,
+      "expect": {
+        "present": [{ "text": "Home" }],
+        "review": [
+          "01-startup-b1〜b5 のうち中身が来る前の frame が、header・sidebar の行・本文の行の形の灰色の帯（shimmer つき）。白紙や spinner だけの frame が無い（DESIGN §15.2-2）",
+          "帯から本物へ cross-fade する。起動が 120ms 未満で済んで帯が 1 枚も写らないのは可（§15.2-2 のちらつき回避）"
+        ]
+      },
+      "evidence": "01-startup.png",
+      "note": "runner は窓が list_windows に出てから撮り始める（窓を探す間隔は 1 秒）。帯が写らなかった時は b1 の時刻を見て、人が実機で起動を見る"
+    },
+    {
+      "id": "s2",
+      "intent": "sidebar の Apps を押し、切替の直後を連続で撮る",
+      "do": "click",
+      "target": { "label": "Apps" },
+      "burst": 4,
+      "expect": {
+        "present": [{ "text": "Apps", "min": 2 }],
+        "review": ["Apps の中身が 120ms を超えて遅れる時は、list の行の形の帯が先に出る（02-apps-b1〜b4）。白紙の frame が無い（DESIGN §15.2-2 View の切替）"]
+      },
+      "evidence": "02-apps.png",
+      "note": "present の 2 件 = sidebar の Apps と本文の title（DESIGN §1.1）"
+    },
+    {
+      "id": "s3",
+      "intent": "sidebar の Home に戻る",
+      "do": "click",
+      "target": { "label": "Home" },
+      "expect": { "present": [{ "text": "何を作りたいですか？", "match": "contains" }] },
+      "evidence": "03-home.png"
+    },
+    {
+      "id": "s4",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "04-typed.png"
+    },
+    {
+      "id": "s5",
+      "intent": "「作る」を押し、生成中を連続で撮ってから出来上がりを待つ",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "burst": 6,
+      "timeout_s": 120,
+      "expect": {
+        "present": [{ "text": "^[0-9]{1,2}:[0-9]{2}(:[0-9]{2})?$", "match": "regex" }],
+        "review": [
+          "生成中（understanding / planning）の 05-generating-b1〜b6 に、出来上がる app の形（時刻の表示・釦の欄）の灰色の帯が出る。空白・spinner だけ・偽の記録が並ぶ frame が無い（DESIGN §15.2-2・§5 understanding）",
+          "帯から本物の timer へ cross-fade する（§15.2-2）"
+        ]
+      },
+      "evidence": "05-generating.png"
+    },
+    {
+      "id": "s6",
+      "intent": "Kangae を閉じて開き直し、作った app が戻る所を連続で撮る",
+      "do": "restart",
+      "burst": 5,
+      "timeout_s": 30,
+      "expect": {
+        "present": [{ "text": "タイマー", "match": "contains" }],
+        "review": ["app を開き直す時、その app の形の帯が先に出て本物へ cross-fade する（06-reopen-b1〜b5・DESIGN §15.2-2 app を開く時）"]
+      },
+      "evidence": "06-reopen.png",
+      "note": "UC-01 再起動で復元（qa-01 s4）の上で、待ちの見せ方だけを見る"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "id": "issue-ide-workbench",
+  "name": "Issue Fix Desk",
+  "purpose": "選択したGitHub Issueの内容を確認し、IDEでテストを実行して結果をレビューする",
+  "sources": [
+    {"id": "github-main", "name": "GitHub", "kind": "api"},
+    {"id": "ide-window", "name": "IDE", "kind": "cua"}
+  ],
+  "capabilities": [
+    {"id": "gh-list", "source_id": "github-main", "name": "Issueの一覧を取得", "kind": "read", "requires_confirmation": false, "verify_as": "read_back"},
+    {"id": "ide-test", "source_id": "ide-window", "name": "選択中のプロジェクトのテストを実行", "kind": "execute", "requires_confirmation": true, "verify_as": "state_compare"}
+  ],
+  "datasets": [
+    {"id": "issues", "produced_by": "gh-list", "record_key": "issue_id"},
+    {"id": "test-report", "produced_by": "ide-test", "record_key": "run_id"}
+  ],
+  "view": {
+    "pattern": "list_detail",
+    "regions": [
+      {"key": "issues-main", "role": "primary", "components": [
+        {"key": "issues-list", "kind": "data_table", "label": "Issue一覧", "importance": "primary", "dataset_id": "issues"}
+      ]},
+      {"key": "issue-context", "role": "context", "components": [
+        {"key": "issue-detail", "kind": "detail", "label": "選択したIssue", "importance": "primary", "dataset_id": "issues", "visible_in": ["selected", "running", "completed", "failed", "unverified"]},
+        {"key": "test-run", "kind": "button", "label": "テストを実行", "importance": "primary", "action_id": "ide-test", "visible_in": ["selected", "completed", "failed", "unverified"]},
+        {"key": "test-result", "kind": "detail", "label": "テスト結果", "importance": "secondary", "dataset_id": "test-report", "visible_in": ["completed", "unverified", "failed"]}
+      ]},
+      {"key": "issue-activity", "role": "activity", "components": [
+        {"key": "test-progress", "kind": "run_progress", "label": "テスト進行状況", "importance": "supporting", "visible_in": ["running", "needs_approval", "failed", "unverified"]}
+      ]}
+    ]
+  },
+  "workflows": [
+    {"id": "review-and-test", "name": "Issue確認とテスト", "steps": [
+      {"id": "read", "capability_id": "gh-list", "after": []},
+      {"id": "test", "capability_id": "ide-test", "after": ["read"]}
+    ]}
+  ]
+}

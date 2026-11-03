@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kangae Agent Proposal v1 (design contract)",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "app_id",
+    "app_version",
+    "title",
+    "reason",
+    "evidence",
+    "target_ref",
+    "kind",
+    "effect",
+    "risk",
+    "permission_scopes",
+    "undoable",
+    "status",
+    "change"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string"
+    },
+    "app_id": {
+      "type": "string"
+    },
+    "app_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "user_goal",
+              "app_state",
+              "event",
+              "source_record",
+              "test_failure"
+            ]
+          },
+          "ref": {
+            "type": "string"
+          },
+          "observed_at": {
+            "type": "string"
+          },
+          "uncertain": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "target_ref": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "ui_patch",
+        "capability_suggestion",
+        "workflow_patch",
+        "data_fix",
+        "connection_request"
+      ]
+    },
+    "effect": {
+      "type": "string"
+    },
+    "risk": {
+      "enum": [
+        "none",
+        "local_reversible",
+        "external_read",
+        "external_write",
+        "external_send",
+        "destructive"
+      ]
+    },
+    "permission_scopes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "undoable": {
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "candidate",
+        "validated",
+        "queued",
+        "shown",
+        "previewed",
+        "approved",
+        "rejected",
+        "snoozed",
+        "applied",
+        "verified",
+        "failed",
+        "reverted"
+      ]
+    },
+    "expires_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "change": {
+      "type": "object",
+      "required": [
+        "summary",
+        "operations"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "op",
+              "target_key"
+            ],
+            "properties": {
+              "op": {
+                "enum": [
+                  "insert",
+                  "remove",
+                  "update",
+                  "move",
+                  "bind"
+                ]
+              },
+              "target_key": {
+                "type": "string"
+              },
+              "value": {}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

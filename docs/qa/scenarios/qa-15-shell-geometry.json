@@ -1,0 +1,88 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-15-shell-geometry",
+  "title": "見た目の門: 1440 幅で Header 56±2・Sidebar 232±2・Agent rail 296±2（AX の frame で測る）",
+  "sources": [
+    "DESIGN.md §1.1 Shell（Header 56・Sidebar 232・Agent rail 296・36×36 header trigger）・§1.2 Primary nav・§2.3 nav row 38・§12.1 Geometry differences <=2px",
+    "DESIGN.md §5.1 ✦ 提案 always visible・§9 Cmd/Ctrl+Shift+P",
+    "KANGAE_MASTER_SPEC.md §10 Shell"
+  ],
+  "scene": "1440×900 の画面で Kangae を初めて開き、timer を 1 つ作る人",
+  "first_words": "タイマーをつくって",
+  "out_of_scope": "色・文字の大きさの数値（AX に出ない）・dark mode・他の幅（qa-16）",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "窓を 1440×900 にして Home の殻を測る",
+      "do": "window",
+      "size": { "width": 1440, "height": 900 },
+      "expect": {
+        "regions": [
+          { "name": "Header", "edge": "top", "h": 56, "tol": 2 },
+          { "name": "Sidebar", "edge": "left", "w": 232, "tol": 2 }
+        ],
+        "present": [
+          { "label": "Home" }, { "label": "Apps" }, { "label": "Runs" }, { "label": "Connections" },
+          { "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" }
+        ],
+        "frames": [
+          { "of": { "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" }, "h": 36, "tol": 2 },
+          { "of": { "label": "Home" }, "h": 38, "tol": 2 }
+        ],
+        "absent": [{ "text": "次にできること", "match": "contains" }],
+        "text_min_h": 12
+      },
+      "evidence": "01-shell-home.png",
+      "note": "Agent rail は新しい人には閉じている前提（DESIGN §1.1 closed by default for new users）。✦ は icon なので、釦の名前は「提案」で始まる物を探す（§5.1・§9）。header の帯・sidebar の帯が AX の要素として無ければ、その 2 つは 未測（frame で測れない）"
+    },
+    {
+      "id": "s2",
+      "intent": "✦ 提案 を押して Agent rail を開く",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" },
+      "expect": {
+        "present": [{ "text": "次にできること", "match": "contains" }],
+        "regions": [{ "name": "Agent rail", "edge": "right", "w": 296, "tol": 2 }]
+      },
+      "evidence": "02-rail.png"
+    },
+    {
+      "id": "s3",
+      "intent": "Cmd+Shift+P で rail を閉じる",
+      "do": "key",
+      "keys": ["cmd", "shift", "p"],
+      "expect": {
+        "present": [{ "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" }],
+        "absent": [{ "text": "次にできること", "match": "contains" }],
+        "regions": [{ "name": "Agent rail", "edge": "right", "absent": true }]
+      },
+      "evidence": "03-rail-closed.png"
+    },
+    {
+      "id": "s4",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "04-typed.png"
+    },
+    {
+      "id": "s5",
+      "intent": "「作る」を押し、生成した app の上でも殻が同じか測る",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "absent": [{ "text": "何を作りたいですか？", "match": "contains" }],
+        "regions": [
+          { "name": "Header", "edge": "top", "h": 56, "tol": 2 },
+          { "name": "Sidebar", "edge": "left", "w": 232, "tol": 2 }
+        ],
+        "text_min_h": 12,
+        "review": ["見出し 20・本文 14・helper 12・余白は 4/8 の刻み（DESIGN §2.1・§2.2）"]
+      },
+      "evidence": "05-shell-app.png"
+    }
+  ]
+}

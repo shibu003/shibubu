@@ -1,0 +1,89 @@
+{
+ "goal": "Spotify で曲を検索して再生する app",
+ "passed": false,
+ "stop": "deadline",
+ "remaining": [],
+ "decisions": [
+  {
+   "software": "Spotify",
+   "action_id": "spotify.playback",
+   "node_key": "spotify-playback",
+   "chosen": null,
+   "why": "口が無い（codegen の候補）: この Mac に無く、registry にも記録が無い",
+   "excluded": [],
+   "fallback": null,
+   "basis": null,
+   "needs": []
+  }
+ ],
+ "codegen": [
+  {
+   "software": "Spotify",
+   "operation": "spotify.playback",
+   "why": "この Mac に無く、registry にも記録が無い"
+  },
+  {
+   "software": "Spotify",
+   "operation": "spotify.library.read",
+   "why": "この Mac に無く、registry にも記録が無い"
+  }
+ ],
+ "app": null,
+ "loss": 37,
+ "elapsed_ms": 98765,
+ "trace": [
+  {
+   "round": 0,
+   "layer": "compose",
+   "change": "composer::compose",
+   "loss": 90,
+   "accepted": true,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 0,
+   "layer": "plan",
+   "change": "Integration Planner",
+   "loss": null,
+   "accepted": false,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 1,
+   "layer": "reading",
+   "change": "候補",
+   "loss": 52,
+   "accepted": true,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 2,
+   "layer": "strategy",
+   "change": "候補",
+   "loss": 37,
+   "accepted": true,
+   "reason": "",
+   "dry_run": []
+  },
+  {
+   "round": 3,
+   "layer": "app",
+   "change": "候補",
+   "loss": 41,
+   "accepted": false,
+   "reason": "",
+   "dry_run": []
+  }
+ ],
+ "target": [
+  {
+   "id": "t1",
+   "word": "未読",
+   "kind": "view"
+  }
+ ],
+ "software": []
+}

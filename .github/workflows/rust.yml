@@ -1,0 +1,80 @@
+name: Rust CI
+# 手元と同じ検査（scripts/lint.sh）を macOS で回し、release build（x86_64 + arm64 の universal）→ Shibubu.app / Shibubu.dmg を artifact に残す。
+# ubuntu / windows は cargo check と cargo test だけ（GUI 依存と .sh の偽 driver は macOS でしか通していない）→ 未検証扱い・continue-on-error。
+# 各 job が platform と timestamp を step summary に書く（TODO DOC-006）。配布手順と platform の表は docs/RELEASE.md。
+# action の版は 2026-10-16 に gh api releases/latest で確認（checkout v7.0.1 / upload-artifact v7.0.2 / rust-cache v2.9.2）。
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+defaults:
+  run:
+    shell: bash
+jobs:
+  macos:
+    name: "macOS: lint + release build + .app/.dmg"
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: jsonschema（v0.12 の schema 検査用。入らなければ lint.sh が skip と報告する）
+        run: pip3 install --quiet jsonschema || pip3 install --quiet --break-system-packages jsonschema || echo "jsonschema を入れられなかった（schema 検査は skip）"
+      - name: tmux（src/terminal の w10_tmux_inside_matches_capture_pane の前提。runner に無い → skip で緑にせず入れる）
+        run: command -v tmux >/dev/null || brew install tmux
+      - name: Lint（check / clippy / test / schema / 後で行う test の登録）
+        run: bash scripts/lint.sh
+      - name: Release build（x86_64 + arm64 の universal）→ Shibubu.app → Shibubu.dmg（ad-hoc 署名）
+        run: bash scripts/release/build-mac.sh --universal
+      - name: Shibubu.app を zip（upload-artifact は実行 bit と symlink を保たないので ditto で固める）
+        run: ditto -c -k --keepParent target/release/bundle/Shibubu.app target/release/bundle/Shibubu.app.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Shibubu-macos-${{ github.sha }}
+          path: |
+            target/release/bundle/Shibubu.dmg
+            target/release/bundle/Shibubu.app.zip
+          if-no-files-found: error
+      - name: "記録（DOC-006: platform と timestamp を step summary に）"
+        if: always()
+        run: |
+          {
+            echo "## macOS ${{ job.status }} $(date -u +%FT%TZ)"
+            echo '```'
+            sw_vers; echo "arch $(uname -m)"; rustc -V; cargo -V
+            shasum -a 256 target/release/bundle/Shibubu.dmg 2>/dev/null || echo "Shibubu.dmg なし（build まで届いていない）"
+            echo "archs: $(lipo -archs target/release/bundle/Shibubu.app/Contents/MacOS/shibubu 2>/dev/null || echo なし)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+  check:
+    name: "${{ matrix.os }}: cargo check / test のみ（未検証扱い）"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Linux の GUI 依存（emilk/eframe_template の .github/workflows/rust.yml と同じ apt 一式）
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
+      - id: check
+        name: "cargo check（未検証: 赤でも止めない）"
+        continue-on-error: true
+        run: cargo check
+      - id: test
+        name: "cargo test（未検証: tests/fake-cua-driver.sh は sh script なので Windows では赤になる見込み）"
+        continue-on-error: true
+        run: cargo test
+      - name: "記録（DOC-006: platform と timestamp。この job は未検証扱い）"
+        if: always()
+        run: |
+          {
+            echo "## ${{ matrix.os }} 未検証（continue-on-error） $(date -u +%FT%TZ)"
+            echo '```'
+            uname -a; rustc -V
+            echo "cargo check: ${{ steps.check.outcome }} / cargo test: ${{ steps.test.outcome }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

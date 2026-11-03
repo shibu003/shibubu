@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+<!-- 架空の app（tests/intel.rs の fixture）。形は Music.app 1.4.5 の Contents/Resources/com.apple.Music.sdef と同じ:
+     suite → access-group / command / class / property。xi:include は Apple の sdef(5) の書き方 -->
+<dictionary title="Pad Terminology" xmlns:xi="http://www.w3.org/2003/XInclude">
+	<xi:include href="file:///System/Library/ScriptingDefinitions/CocoaStandard.sdef" xpointer="xpointer(/dictionary/suite)"/>
+	<suite name="Pad Suite" code="kPad" description="Pad &amp; friends &lt;fixture&gt;">
+		<access-group identifier="dev.kangae.fixture.pad.read" access="r"/>
+		<command name="count" code="corecnte" description="Return the number of notes"/>
+		<command name="search" code="kPadsrch" description="search notes for text > 3 chars">
+			<access-group identifier="dev.kangae.fixture.pad.read" access="r"/>
+			<direct-parameter type="text" description="what to find"/>
+			<result type="note" list="yes"/>
+		</command>
+		<command name="send note" code="kPadsend" description="Send a note to someone">
+			<direct-parameter type="note"/>
+		</command>
+		<command name="secret wipe" code="kPadwipe" hidden="yes" description="internal"/>
+		<!-- <command name="commented out" code="xxxxxxxx"/> -->
+		<class name="note" code="kNot" description="A note" plural="notes">
+			<property name="title" code="pnam" type="text" access="r"/>
+			<property name="body" code="kBdy" type="text"/>
+		</class>
+		<class-extension extends="application">
+			<property name="current note" code="kCur" type="note" access="r"/>
+		</class-extension>
+		<record-type name="note info" code="kNfo">
+			<property name="size" code="ksiz" type="integer"/>
+		</record-type>
+		<documentation><html><![CDATA[<command name="cdata command" code="zzzzzzzz">]]></html></documentation>
+	</suite>
+	<suite name="Hidden Suite" code="kHid" description="debug" hidden="yes">
+		<command name="debug dump" code="kHiddump"/>
+	</suite>
+</dictionary>

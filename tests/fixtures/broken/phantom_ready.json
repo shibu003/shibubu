@@ -1,0 +1,12 @@
+{
+  "schema_version": "3.0", "id": "broken.phantom_ready", "version": 1, "title": "local_demo で external_send が ready",
+  "goal": {"literal_goal": "メールを送りたい", "outcomes": ["メールを送りたい"]},
+  "composition": {"root": {"key": "mail-root", "component": "column", "props": {}, "children": [
+    {"key": "mail-send", "component": "button", "props": {"label": "送信"}, "action_ref": "external.mail.send"}
+  ]}},
+  "capabilities": [{"id": "mail.provider", "provider": "example-mail", "readiness": "ready", "required_scopes": ["mail.send"]}],
+  "actions": [{"id": "external.mail.send", "capability_ref": "mail.provider", "effect": "external_send", "readiness": "ready", "input_schema": {"type": "object"}, "required_scopes": ["mail.send"], "requires_approval": true}],
+  "sources": [],
+  "agent": {"suggestions_enabled": true, "autonomy_level": "suggest_only", "entrypoint": "agent_rail"},
+  "state": {"readiness": "preview", "execution_mode": "local_demo"}
+}

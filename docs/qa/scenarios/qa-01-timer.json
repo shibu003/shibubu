@@ -1,0 +1,65 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-01-timer",
+  "title": "「タイマー」→ 連携 0 のローカル実動 app（開き直しても戻る）",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12「タイマー」→連携0のローカル実動アプリ",
+    "DESIGN.md §6.1 First-run UI・§12.2 タイマーをつくって",
+    "KANGAE_MASTER_SPEC.md §12 タイマーが欲しい・§15 UC-01 実動作＋再起動で復元"
+  ],
+  "scene": "初めて Kangae を開いた人。どの service にも login していない。料理の間に使う timer が欲しい",
+  "first_words": "タイマーをつくって",
+  "out_of_scope": "timer の音・通知・見た目の数値（文字と余白は qa-10・殻の寸法は qa-15）",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png",
+      "note": "入力欄の名前は見出しの「何を作りたいですか？」（DESIGN §6.1。§4.2 placeholder は名前にならない）"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押し、動く timer が出るのを待つ",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "present": [
+          { "text": "^[0-9]{1,2}:[0-9]{2}(:[0-9]{2})?$", "match": "regex" },
+          { "role": "AXButton", "text": "開始|スタート|Start|▶", "match": "regex" }
+        ],
+        "absent": [
+          { "text": "ログイン|サインイン|電話番号|接続が必要|要接続", "match": "regex" },
+          { "text": "何を作りたいですか？", "match": "contains" }
+        ],
+        "review": ["偽の数字（KPI・使った回数など）が並んでいない（DESIGN §12.2 prefilled metrics なし・§3 KPI card 0）"]
+      },
+      "evidence": "02-timer.png",
+      "note": "DESIGN に timer の釦の文言は無い。時刻の表示 1 つと開始の釦 1 つが在る事だけを見る"
+    },
+    {
+      "id": "s3",
+      "intent": "開始を押して 3 秒待つ",
+      "do": "click",
+      "target": { "role": "AXButton", "text": "開始|スタート|Start|▶", "match": "regex" },
+      "settle_s": 3,
+      "expect": {
+        "compare": [{ "of": { "text": "^[0-9]{1,2}:[0-9]{2}(:[0-9]{2})?$", "match": "regex" }, "since": "s2", "attr": "text", "same": false }]
+      },
+      "evidence": "03-running.png"
+    },
+    {
+      "id": "s4",
+      "intent": "Kangae を Cmd+Q で閉じ、開き直す",
+      "do": "restart",
+      "timeout_s": 30,
+      "expect": { "present": [{ "text": "タイマー", "match": "contains" }] },
+      "evidence": "04-restored.png",
+      "note": "UC-01「再起動で復元」。同じ KANGAE_DATA_DIR で起こす"
+    }
+  ]
+}

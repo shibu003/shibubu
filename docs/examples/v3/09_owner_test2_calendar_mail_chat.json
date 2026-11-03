@@ -1,0 +1,295 @@
+{
+  "schema_version": "3.0",
+  "id": "example.v3.owner_test2_calendar_mail_chat",
+  "version": 1,
+  "title": "予定・メール・Claude",
+  "goal": {
+    "literal_goal": "Calendar と Gmail と claude.ai をまとめた画面にして。全部そこから操作できて、chat bar でも指示できるように。",
+    "outcomes": [
+      "予定の一覧と作成・変更、メールの一覧・返信・下書き、Claude との会話が同じ作業面に並ぶ",
+      "chat bar に「明日の 10 時に A さんと打合せ、招待も送って」と打つと、予定作成と招待メールの下書きが確認待ちに出て、承認で実行",
+      "承認の前に外部へ何も書かない"
+    ],
+    "assumptions": [
+      "Calendar / Gmail は Google の 1 アカウント。未接続（OAuth の同意が要る）",
+      "claude.ai の会話 UI は web をそのまま出す。埋め込みが許されなければ handoff（ACCEPTANCE R2 の判断）",
+      "chat bar の裏は Kangae の agent。model の設定は runtime 側で、app には埋めない"
+    ],
+    "constraints": [
+      "招待・返信の送信は 1 件ずつ承認（RUN-007）",
+      "予定の作成・変更も承認（external_write）",
+      "接続先は必要になった時だけ聞く（TEST-005）"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "cm-root",
+      "component": "column",
+      "children": [
+        {
+          "key": "cm-command",
+          "component": "command_input",
+          "label": "指示",
+          "props": { "placeholder": "例: 明日の 10 時に A さんと打合せ、招待も送って" },
+          "action_ref": "local.agent.command"
+        },
+        {
+          "key": "cm-split",
+          "component": "split",
+          "layout": { "ratio": [0.35, 0.35, 0.3] },
+          "children": [
+            {
+              "key": "cm-calendar",
+              "component": "calendar",
+              "role": "primary",
+              "label": "予定",
+              "binding": { "source_ref": "google.calendar", "path": "events" },
+              "states": { "requires_connection": "Google を繋ぐと予定が出る", "empty": "予定はありません" }
+            },
+            {
+              "key": "cm-mail",
+              "component": "list",
+              "label": "メール",
+              "binding": { "source_ref": "google.gmail", "path": "threads" },
+              "states": { "requires_connection": "Google を繋ぐとメールが出る", "empty": "メールはありません" }
+            },
+            {
+              "key": "cm-claude",
+              "component": "source_surface",
+              "label": "claude.ai",
+              "props": { "display": "embedded", "fallback": "handoff" },
+              "action_ref": "claude_ai.open"
+            }
+          ]
+        },
+        {
+          "key": "cm-actions",
+          "component": "row",
+          "children": [
+            {
+              "key": "cm-event-new",
+              "component": "button",
+              "label": "予定を作る",
+              "props": { "variant": "primary" },
+              "action_ref": "calendar.events.create",
+              "states": { "disabled": "Google を繋ぐと作れる（承認つき）" }
+            },
+            {
+              "key": "cm-mail-send",
+              "component": "button",
+              "label": "確認して送る",
+              "props": { "variant": "secondary" },
+              "action_ref": "gmail.messages.send",
+              "states": { "disabled": "Google を繋ぎ、宛先と本文を確認してから。1 通ずつ承認" }
+            }
+          ]
+        },
+        {
+          "key": "cm-reply",
+          "component": "form",
+          "label": "返信の下書き",
+          "visibility": { "when": "has_selection" },
+          "props": {
+            "fields": [
+              { "name": "to", "label": "宛先", "input": "text" },
+              { "name": "subject", "label": "件名", "input": "text" },
+              { "name": "body", "label": "本文", "input": "multiline" }
+            ]
+          },
+          "binding": { "source_ref": "local.drafts", "path": "selected" },
+          "action_ref": "local.drafts.save"
+        },
+        {
+          "key": "cm-approvals",
+          "component": "list",
+          "label": "確認待ち",
+          "binding": { "source_ref": "local.proposals", "path": "pending" },
+          "states": { "empty": "確認待ちはありません。chat bar の指示や提案がここに並ぶ" }
+        },
+        {
+          "key": "cm-approve-row",
+          "component": "row",
+          "children": [
+            {
+              "key": "cm-approve",
+              "component": "button",
+              "label": "承認して実行",
+              "props": { "variant": "primary" },
+              "action_ref": "local.proposal.approve"
+            },
+            {
+              "key": "cm-reject",
+              "component": "button",
+              "label": "却下",
+              "props": { "variant": "secondary" },
+              "action_ref": "local.proposal.reject"
+            }
+          ]
+        },
+        {
+          "key": "cm-runs",
+          "component": "run_progress",
+          "label": "実行結果",
+          "binding": { "source_ref": "local.runs", "path": "latest" },
+          "states": { "empty": "まだ実行していません" }
+        }
+      ]
+    },
+    "view_modes": ["use", "build", "inspect", "run", "review"]
+  },
+  "capabilities": [
+    { "id": "calendar.events.read", "provider": "google", "readiness": "requires_connection", "required_scopes": ["calendar.read"], "adapter": "api" },
+    { "id": "calendar.events.create", "provider": "google", "readiness": "requires_connection", "required_scopes": ["calendar.write"], "adapter": "api" },
+    { "id": "calendar.events.update", "provider": "google", "readiness": "requires_connection", "required_scopes": ["calendar.write"], "adapter": "api" },
+    { "id": "gmail.threads.read", "provider": "google", "readiness": "requires_connection", "required_scopes": ["mail.read"], "adapter": "api" },
+    { "id": "gmail.drafts.create", "provider": "google", "readiness": "requires_connection", "required_scopes": ["mail.compose"], "adapter": "api" },
+    { "id": "gmail.messages.send", "provider": "google", "readiness": "requires_connection", "required_scopes": ["mail.send"], "adapter": "api" },
+    { "id": "web.embed", "provider": "claude.ai", "readiness": "discoverable", "required_scopes": [], "adapter": "embed" },
+    { "id": "web.handoff", "provider": null, "readiness": "ready", "required_scopes": [], "adapter": "handoff" }
+  ],
+  "actions": [
+    {
+      "id": "local.agent.command",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["text"], "properties": { "text": { "type": "string", "minLength": 1 } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "proposal_ids": { "type": "array" } } },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "calendar.events.read",
+      "capability_ref": "calendar.events.read",
+      "effect": "external_read",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["account_id"], "properties": { "account_id": { "type": "string" }, "from": { "type": "string" }, "to": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": ["calendar.read"],
+      "verifier": "read_back",
+      "requires_approval": false
+    },
+    {
+      "id": "calendar.events.create",
+      "capability_ref": "calendar.events.create",
+      "effect": "external_write",
+      "readiness": "requires_connection",
+      "input_schema": {
+        "type": "object",
+        "required": ["account_id", "title", "start", "end"],
+        "properties": { "account_id": { "type": "string" }, "title": { "type": "string" }, "start": { "type": "string" }, "end": { "type": "string" }, "attendee_ids": { "type": "array", "items": { "type": "string" } } },
+        "additionalProperties": false
+      },
+      "required_scopes": ["calendar.write"],
+      "verifier": "read_back",
+      "requires_approval": true
+    },
+    {
+      "id": "calendar.events.update",
+      "capability_ref": "calendar.events.update",
+      "effect": "external_write",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["account_id", "event_id"], "properties": { "account_id": { "type": "string" }, "event_id": { "type": "string" }, "title": { "type": "string" }, "start": { "type": "string" }, "end": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": ["calendar.write"],
+      "verifier": "read_back",
+      "requires_approval": true
+    },
+    {
+      "id": "gmail.threads.read",
+      "capability_ref": "gmail.threads.read",
+      "effect": "external_read",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["account_id"], "properties": { "account_id": { "type": "string" }, "query": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": ["mail.read"],
+      "verifier": "read_back",
+      "requires_approval": false
+    },
+    {
+      "id": "local.drafts.save",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["body"], "properties": { "thread_id": { "type": "string" }, "to": { "type": "string" }, "subject": { "type": "string" }, "body": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "gmail.drafts.create",
+      "capability_ref": "gmail.drafts.create",
+      "effect": "external_write",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["account_id", "draft_id"], "properties": { "account_id": { "type": "string" }, "draft_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": ["mail.compose"],
+      "verifier": "read_back",
+      "requires_approval": true
+    },
+    {
+      "id": "gmail.messages.send",
+      "capability_ref": "gmail.messages.send",
+      "effect": "external_send",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["account_id", "draft_id"], "properties": { "account_id": { "type": "string" }, "draft_id": { "type": "string" } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "status": { "enum": ["sent_confirmed", "failed", "outcome_unknown"] } } },
+      "required_scopes": ["mail.send"],
+      "verifier": "source_receipt",
+      "requires_approval": true
+    },
+    {
+      "id": "local.proposal.approve",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["proposal_id"], "properties": { "proposal_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.proposal.reject",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["proposal_id"], "properties": { "proposal_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "claude_ai.open",
+      "capability_ref": "web.handoff",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "state_compare",
+      "requires_approval": false
+    }
+  ],
+  "sources": [
+    { "id": "google.calendar", "kind": "external_api", "readiness": "requires_connection", "provider": "google", "last_observed_at": null },
+    { "id": "google.gmail", "kind": "external_api", "readiness": "requires_connection", "provider": "google", "last_observed_at": null },
+    { "id": "local.drafts", "kind": "local_collection", "readiness": "local", "scope": "app" },
+    { "id": "local.proposals", "kind": "local_collection", "readiness": "local", "scope": "app" },
+    { "id": "local.runs", "kind": "local_collection", "readiness": "local", "scope": "app" }
+  ],
+  "workflows": [
+    { "id": "meeting_with_invite", "action_refs": ["calendar.events.create", "gmail.drafts.create", "gmail.messages.send"], "approval": "exact_payload" },
+    { "id": "reply_mail", "action_refs": ["local.drafts.save", "gmail.messages.send"], "approval": "exact_payload" }
+  ],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "ask_before_external_effects",
+    "entrypoint": "command_bar",
+    "policy_scope": ["local.proposals", "calendar.write:approval_required", "mail.send:approval_required_per_message"]
+  },
+  "state": {
+    "readiness": "partial",
+    "execution_mode": "local_ready",
+    "status_message": "chat bar と確認待ちは動く。予定とメールは Google を繋いでから。claude.ai は web をそのまま開く。"
+  },
+  "metadata": {
+    "corpus": {
+      "prompt": "Calendar と Gmail と claude.ai をまとめた画面にして。全部そこから操作できて、chat bar でも指示できるように。",
+      "todo": ["ACCEPTANCE test2", "TEST-005", "CON-002", "CON-003", "LEG-007"],
+      "differs_by": "command_input（chat bar）が agent の entrypoint = command_bar。3 分割の split に calendar / list / source_surface（embedded、fallback handoff）。承認は local.proposals の list と workflow の exact_payload",
+      "scene": "owner の受け入れ test2（docs/ACCEPTANCE.md §3）。Google の OAuth client を誰の名前で持つかは要確認のまま"
+    }
+  }
+}

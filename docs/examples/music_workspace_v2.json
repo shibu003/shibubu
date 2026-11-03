@@ -1,0 +1,45 @@
+{
+  "schema_version": "2.0",
+  "id": "music-workspace-v2", "name": "Music Workspace",
+  "purpose": "許可された音楽・動画の再生と録音を行い、作成したローカル音声をREAPERへ送る",
+  "sources": [
+    {"id": "video", "display_name": "YouTube official player", "adapter_kind": "provider_surface"},
+    {"id": "music", "display_name": "Apple Music permitted playback", "adapter_kind": "api"},
+    {"id": "microphone", "display_name": "Local microphone", "adapter_kind": "local"},
+    {"id": "reaper", "display_name": "REAPER", "adapter_kind": "cua"}
+  ],
+  "capabilities": [
+    {"id": "play-media", "source_id": "music", "catalog_ref": "media.playback.control", "effect": "execute", "verification": "state_compare", "approval": "runtime_policy"},
+    {"id": "record-vocal", "source_id": "microphone", "catalog_ref": "local.audio.record", "effect": "execute", "verification": "read_back", "approval": "always"},
+    {"id": "reaper-import", "source_id": "reaper", "catalog_ref": "reaper.audio.import", "effect": "external_write", "verification": "state_compare", "approval": "always"}
+  ],
+  "entities": [
+    {"id": "media-list", "identity_key": "track_id", "fields": [{"name": "title", "type": "string"}, {"name": "uri", "type": "url"}]},
+    {"id": "recording-list", "identity_key": "recording_id", "fields": [{"name": "file", "type": "bytes_ref"}, {"name": "created", "type": "datetime"}]}
+  ],
+  "actions": [
+    {"id": "music-control", "capability_id": "play-media", "target_entity_id": "media-list"},
+    {"id": "record-mic", "capability_id": "record-vocal", "target_entity_id": "recording-list"},
+    {"id": "import-to-reaper", "capability_id": "reaper-import", "target_entity_id": "recording-list"}
+  ],
+  "views": [
+    {"id": "music-arrange", "label": "音楽制作", "root": {
+      "key": "music-root", "type_id": "layout.stack", "label": "音楽制作", "children": [
+        {"key": "source-and-record", "type_id": "layout.split", "label": "再生と録音", "children": [
+          {"key": "player-group", "type_id": "layout.stack", "label": "参考曲", "priority": "secondary", "children": [
+            {"key": "music-library", "type_id": "ui.list", "label": "許可されたライブラリ", "data_ref": "media-list"},
+            {"key": "music-player", "type_id": "ui.player", "label": "再生操作", "action_ref": "music-control"},
+            {"key": "youtube-provider", "type_id": "surface.provider_player", "label": "YouTube公式プレイヤー", "props": {"provider": "youtube"}}
+          ]},
+          {"key": "record-group", "type_id": "layout.stack", "label": "音声録音と素材", "priority": "primary", "children": [
+            {"key": "vocal-record", "type_id": "ui.recorder", "label": "録音", "action_ref": "record-mic"},
+            {"key": "audio-wave", "type_id": "extension.vendor.waveform@1", "label": "録音波形", "data_ref": "recording-list"},
+            {"key": "reaper-import-action", "type_id": "ui.button", "label": "REAPERへ追加", "action_ref": "import-to-reaper"}
+          ]}
+        ]},
+        {"key": "reaper-launch", "type_id": "ui.notice", "label": "REAPERの編集は利用可能な場合は元のアプリで続ける"}
+      ]
+    }}
+  ],
+  "workflows": [{"id": "voice-to-reaper", "label": "録音から追加", "trigger": "manual", "steps": [{"id": "step-record", "action_id": "record-mic", "after": []}, {"id": "step-import", "action_id": "import-to-reaper", "after": ["step-record"]}]}]
+}

@@ -1,0 +1,144 @@
+{
+  "elements": [
+    {
+      "role": "AXTextArea",
+      "label": "What do you want to create?",
+      "element_token": "t-goal"
+    },
+    {
+      "role": "AXButton",
+      "label": "Create",
+      "element_token": "t-create"
+    },
+    {
+      "role": "AXTextField",
+      "label": "Change this project",
+      "element_token": "t-change"
+    },
+    {
+      "role": "AXTextField",
+      "label": "Type in the terminal",
+      "element_token": "t-term_in"
+    },
+    {
+      "role": "AXButton",
+      "label": "Add terminal",
+      "element_token": "t-add_term"
+    },
+    {
+      "role": "AXButton",
+      "label": "Save to repo",
+      "element_token": "t-save_repo"
+    },
+    {
+      "role": "AXButton",
+      "label": "Mirror here",
+      "element_token": "t-mirror"
+    },
+    {
+      "role": "AXButton",
+      "label": "Add",
+      "element_token": "t-add"
+    },
+    {
+      "role": "AXButton",
+      "label": "Send",
+      "element_token": "t-send"
+    },
+    {
+      "role": "AXButton",
+      "label": "Run tests",
+      "element_token": "t-run_tests"
+    },
+    {
+      "role": "AXButton",
+      "label": "Refresh",
+      "element_token": "t-reload"
+    },
+    {
+      "role": "AXButton",
+      "label": "↶ Undo",
+      "element_token": "t-undo"
+    },
+    {
+      "role": "AXButton",
+      "label": "↷ Redo",
+      "element_token": "t-redo"
+    },
+    {
+      "role": "AXButton",
+      "label": "← Back",
+      "element_token": "t-back"
+    },
+    {
+      "role": "AXButton",
+      "label": "Show terminal",
+      "element_token": "t-drawer"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "Checking: cargo test",
+      "element_token": "t-checking"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "Running (cargo test). The result appears below",
+      "element_token": "t-running_cmd"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "Exit code 101",
+      "element_token": "t-exit_code"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "Shibubu's window isn't opened with the argument x (open it with plain shibubu or Shibubu.app)",
+      "element_token": "t-usage_refuse"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "失敗",
+      "element_token": "t-failed"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "Built with simple rules because AI wasn't available · AI was stopped at its limit (10 calls) · raise it in Settings › AI & Models › Execution limit",
+      "element_token": "t-ai_cap"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "人が Terminal に打っている間は、AI の入力は送りません",
+      "element_token": "t-human_typing"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "Placed it in docs/x.excalidraw of the repo (see it with git status)",
+      "element_token": "t-saved_line"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "Connected",
+      "element_token": "t-connected"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "Saved",
+      "element_token": "t-saved_msg"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "Done",
+      "element_token": "t-finished"
+    },
+    {
+      "role": "AXButton",
+      "label": "Save",
+      "element_token": "t-save"
+    },
+    {
+      "role": "AXStaticText",
+      "label": "Screen recording is off · Open settings",
+      "element_token": "t-mirror_denied"
+    }
+  ]
+}

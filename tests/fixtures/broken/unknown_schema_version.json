@@ -1,0 +1,9 @@
+{
+  "schema_version": "4.0", "id": "broken.unknown_schema_version", "version": 1, "title": "知らない schema_version",
+  "goal": {"literal_goal": "研究ノートを作りたい", "outcomes": ["研究ノートを作りたい"]},
+  "composition": {"root": {"key": "research-root", "component": "column", "props": {}}},
+  "actions": [],
+  "sources": [],
+  "agent": {"suggestions_enabled": true, "autonomy_level": "suggest_only", "entrypoint": "agent_rail"},
+  "state": {"readiness": "preview", "execution_mode": "local_demo"}
+}

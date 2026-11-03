@@ -1,0 +1,61 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-03-design-ide",
+  "title": "「デザインと IDE」→ 元の画面の手動編集・data API・生成 UI を 1 つの app で併用する",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12「デザインとIDE」→手動編集＋データAPI＋生成UIを併用",
+    "KANGAE_MASTER_SPEC.md §12 デザインして開発したい・§3.2・§15 UC-03",
+    "DESIGN.md §4.4 Source/external UI surfaces・§6.1 後で接続・§14.1〜14.3"
+  ],
+  "scene": "design tool と IDE を行き来して作っている人。Kangae は初めて。どの service にもまだ繋いでいない",
+  "first_words": "デザインして開発したい",
+  "out_of_scope": "Figma や IDE への実際の login と編集（test 用 account が要る。人の手）",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "present": [
+          { "role": "AXButton", "label": "後で接続", "match": "contains" },
+          { "text": "要接続|接続が必要", "match": "regex" }
+        ],
+        "absent": [
+          { "text": "接続済み", "match": "contains" },
+          { "text": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "match": "regex" }
+        ],
+        "review": ["元の Canvas / IDE を作り直さず、元の app を開く道が表示の種類（DESIGN §4.4 native / embedded / handoff / mirror / composite）つきで出ている"]
+      },
+      "evidence": "02-plan.png",
+      "note": "§6.1「後で接続」は local で進められる時は必ず在る。どの account も仮定しない（email の形の文字が出ない）"
+    },
+    {
+      "id": "s3",
+      "intent": "「後で接続」を押して、繋がないまま使い始める",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "後で接続", "match": "contains" },
+      "timeout_s": 30,
+      "expect": {
+        "present": [{ "text": "手動で開く|手動|Open|Focus", "match": "regex" }],
+        "absent": [{ "text": "接続済み", "match": "contains" }],
+        "review": [
+          "生成した橋渡しの UI・元の UI の入口・API の面が同じ画面にあり、元 UI との境は 1px で card を足していない（§14.3）",
+          "繋いでいない元 app の領域を、偽の screenshot や架空の data で埋めて ready に見せていない（§14.3）"
+        ]
+      },
+      "evidence": "03-later.png",
+      "note": "§14.2 available_manual =「手動で開く、操作できる範囲」/ Open・Focus"
+    }
+  ]
+}

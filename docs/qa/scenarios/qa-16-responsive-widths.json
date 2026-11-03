@@ -1,0 +1,82 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-16-responsive-widths",
+  "title": "見た目の門: 幅ごとの殻（1300 で Sidebar 216・1024 で 64・768 と 390 で隠す）と、どの幅でも ✦ 提案",
+  "sources": [
+    "DESIGN.md §8 Responsive behavior の表・§12.1 Compare 1440/1024/768/390・§9 Every icon-only button has accessible name",
+    "DESIGN.md §8 Agent rail toggle accessible in every mode・§3 do not shrink text below 12px"
+  ],
+  "scene": "ノートの小さな画面や、窓を半分にして使う人",
+  "first_words": "タイマーをつくって",
+  "out_of_scope": "touch の 44×44・mobile の keyboard safe area",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": { "absent": [{ "text": "何を作りたいですか？", "match": "contains" }] },
+      "evidence": "02-app.png"
+    },
+    {
+      "id": "s3",
+      "intent": "窓を 1300 幅にする",
+      "do": "window",
+      "size": { "width": 1300, "height": 900 },
+      "expect": {
+        "regions": [{ "name": "Sidebar", "edge": "left", "w": 216, "tol": 2 }],
+        "present": [{ "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" }]
+      },
+      "evidence": "03-w1300.png"
+    },
+    {
+      "id": "s4",
+      "intent": "窓を 1024 幅にする",
+      "do": "window",
+      "size": { "width": 1024, "height": 800 },
+      "expect": {
+        "regions": [{ "name": "Sidebar", "edge": "left", "w": 64, "tol": 2 }],
+        "present": [{ "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" }],
+        "named": ["AXButton", "AXCheckBox", "AXTextField", "AXTextArea"]
+      },
+      "evidence": "04-w1024.png",
+      "note": "icon だけになった nav にも名前（DESIGN §9）"
+    },
+    {
+      "id": "s5",
+      "intent": "窓を 768 幅にする",
+      "do": "window",
+      "size": { "width": 768, "height": 800 },
+      "expect": {
+        "regions": [{ "name": "Sidebar", "edge": "left", "absent": true }],
+        "present": [{ "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" }],
+        "text_min_h": 12
+      },
+      "evidence": "05-w768.png"
+    },
+    {
+      "id": "s6",
+      "intent": "窓を 390 幅にする",
+      "do": "window",
+      "size": { "width": 390, "height": 800 },
+      "expect": {
+        "regions": [{ "name": "Sidebar", "edge": "left", "absent": true }],
+        "present": [{ "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" }],
+        "text_min_h": 12,
+        "review": ["1 列・左右 16px・横 scroll が出ていない（DESIGN §8 320–599）"]
+      },
+      "evidence": "06-w390.png",
+      "note": "窓がその幅まで狭まらない時は、帯の検査が 未測 になる（窓の最小幅）"
+    }
+  ]
+}

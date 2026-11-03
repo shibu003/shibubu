@@ -1,0 +1,65 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-05-conversations",
+  "title": "「会話統合」→ 許した source だけ。接続の状態を正しく出す",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12「会話統合」→許可されたソースのみ、接続状態を正確に表示",
+    "DESIGN.md §12.2 メッセージをまとめて・§10 Only enumerate resources that user explicitly authorized・§11",
+    "KANGAE_MASTER_SPEC.md §12 会話をまとめたい（Android/WhatsApp/LINE を必須にしない）・§3.3"
+  ],
+  "scene": "仕事と私用の連絡が何か所にも散っている人。Kangae は初めてで、まだ何も繋いでいない",
+  "first_words": "メッセージをまとめて",
+  "out_of_scope": "実際の chat service への login と取り込み（test 用 account が要る）",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "present": [{ "text": "要接続|接続が必要|未接続", "match": "regex" }],
+        "absent": [
+          { "text": "接続済み", "match": "contains" },
+          { "text": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "match": "regex" }
+        ],
+        "review": ["候補の service が並び、それぞれの状態が文字と形で出ている。どの account も仮定していない（DESIGN §12.2）"]
+      },
+      "evidence": "02-candidates.png"
+    },
+    {
+      "id": "s3",
+      "intent": "「後で接続」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "後で接続", "match": "contains" },
+      "timeout_s": 30,
+      "expect": {
+        "present": [{ "text": "まだデータがありません", "match": "contains" }],
+        "absent": [{ "text": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "match": "regex" }],
+        "review": ["許していない source（入っている全部の app・端末・個人の chat）を勝手に読んで並べていない（DESIGN §10）"]
+      },
+      "evidence": "03-empty.png"
+    },
+    {
+      "id": "s4",
+      "intent": "Kangae を閉じて開き直す",
+      "do": "restart",
+      "timeout_s": 30,
+      "expect": {
+        "present": [{ "text": "要接続|接続が必要|未接続", "match": "regex" }],
+        "absent": [{ "text": "接続済み", "match": "contains" }]
+      },
+      "evidence": "04-restored.png",
+      "note": "開き直しても接続の状態を偽らない（KANGAE_MASTER_SPEC §3.3 発見しただけなら ready にしない）"
+    }
+  ]
+}

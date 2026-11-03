@@ -1,0 +1,214 @@
+{
+  "schema_version": "3.0",
+  "id": "example.v3.research_notes",
+  "version": 1,
+  "title": "研究ノート",
+  "goal": {
+    "literal_goal": "研究ノートを作りたい",
+    "outcomes": [
+      "ノートを書いて、一覧と検索ができる",
+      "取り込んだ資料に出典（file 名・取り込み日時）が残り、ノートの引用から辿れる",
+      "取り込むのは利用者が選んだ file だけ"
+    ],
+    "assumptions": [
+      "端末内だけで動く。web や cloud の資料は繋がない",
+      "資料は PDF / text などの local file"
+    ],
+    "constraints": [
+      "本人が選んだ file 以外の中身を読まない（DESIGN §10）",
+      "出典の無い引用を作らない（RUN-009）"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "research-root",
+      "component": "split",
+      "layout": { "ratio": [0.4, 0.6] },
+      "children": [
+        {
+          "key": "research-side",
+          "component": "column",
+          "role": "context",
+          "children": [
+            {
+              "key": "research-search",
+              "component": "form",
+              "label": "検索",
+              "props": { "fields": [ { "name": "query", "label": "ノートと資料を検索", "input": "text" } ] },
+              "binding": { "source_ref": "local.notes", "path": "filter" },
+              "action_ref": "local.notes.search"
+            },
+            {
+              "key": "research-notes",
+              "component": "list",
+              "label": "ノート",
+              "binding": { "source_ref": "local.notes", "path": "items" },
+              "states": { "empty": "まだノートがありません。「新しいノート」で始める" }
+            },
+            {
+              "key": "research-note-new",
+              "component": "button",
+              "label": "新しいノート",
+              "props": { "variant": "primary" },
+              "action_ref": "local.notes.create"
+            },
+            {
+              "key": "research-sources",
+              "component": "list",
+              "label": "取り込んだ資料",
+              "binding": { "source_ref": "local.imports", "path": "items" },
+              "states": { "empty": "まだ資料がありません。「資料を取り込む」で file を選ぶ" }
+            },
+            {
+              "key": "research-import",
+              "component": "button",
+              "label": "資料を取り込む",
+              "props": { "variant": "secondary" },
+              "action_ref": "local.imports.add"
+            }
+          ]
+        },
+        {
+          "key": "research-main",
+          "component": "column",
+          "role": "primary",
+          "children": [
+            {
+              "key": "research-editor",
+              "component": "editor",
+              "label": "本文",
+              "binding": { "source_ref": "local.notes", "path": "selected.body" }
+            },
+            {
+              "key": "research-citations",
+              "component": "list",
+              "label": "このノートの出典",
+              "binding": { "source_ref": "local.notes", "path": "selected.citations" },
+              "states": { "empty": "まだ出典がありません。資料を選んで「引用を入れる」" }
+            },
+            {
+              "key": "research-main-actions",
+              "component": "row",
+              "children": [
+                {
+                  "key": "research-save",
+                  "component": "button",
+                  "label": "保存",
+                  "props": { "variant": "primary" },
+                  "action_ref": "local.notes.save"
+                },
+                {
+                  "key": "research-cite",
+                  "component": "button",
+                  "label": "引用を入れる",
+                  "props": { "variant": "secondary" },
+                  "action_ref": "local.notes.cite"
+                },
+                {
+                  "key": "research-delete",
+                  "component": "button",
+                  "label": "削除する",
+                  "props": { "variant": "danger" },
+                  "action_ref": "local.notes.delete"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "view_modes": ["use", "build", "review"]
+  },
+  "capabilities": [],
+  "actions": [
+    {
+      "id": "local.notes.search",
+      "effect": "local_read",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "properties": { "query": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.notes.create",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "properties": { "title": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.notes.save",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["note_id", "body"], "properties": { "note_id": { "type": "string" }, "body": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.notes.cite",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": {
+        "type": "object",
+        "required": ["note_id", "import_id"],
+        "properties": { "note_id": { "type": "string" }, "import_id": { "type": "string" }, "quote": { "type": "string" } },
+        "additionalProperties": false
+      },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.notes.delete",
+      "effect": "destructive",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["note_id"], "properties": { "note_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": true
+    },
+    {
+      "id": "local.imports.add",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": {
+        "type": "object",
+        "required": ["file_ref"],
+        "properties": { "file_ref": { "type": "string", "description": "利用者が picker で選んだ file の参照 id" } },
+        "additionalProperties": false
+      },
+      "output_schema": { "type": "object", "properties": { "import_id": { "type": "string" }, "imported_at": { "type": "string" } } },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    }
+  ],
+  "sources": [
+    { "id": "local.notes", "kind": "local_collection", "readiness": "local", "scope": "app" },
+    { "id": "local.imports", "kind": "local_collection", "readiness": "local", "scope": "app" }
+  ],
+  "workflows": [],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail",
+    "policy_scope": ["local"]
+  },
+  "state": {
+    "readiness": "ready",
+    "execution_mode": "local_ready",
+    "status_message": "端末内で動く。資料は選んだ file だけ取り込む。"
+  },
+  "metadata": {
+    "corpus": {
+      "prompt": "研究ノートを作りたい",
+      "todo": ["TEST-003", "GEN-004", "GEN-013"],
+      "differs_by": "text edit → editor が主役（60%）。引用は取り込んだ資料への参照（出典つき）で、出典の無い引用は作れない",
+      "scene": "既存の app_v3_research.json（設計サンプル）を、検索・出典・削除 gate まで肉付けした形"
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-11-no-unapproved-send",
+  "title": "Agent に一括送信を頼んでも、承認の無い送信は走らない",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12 承認のない送信・削除・共有が実行されない・§6 M5 無承認の外部送信のE2E拒否テスト",
+    "DESIGN.md §12.2 営業を整理したい（no unapproved mass send）・§4.5・§10 High-impact actions・§11 確認待ち",
+    "KANGAE_MASTER_SPEC.md §6.3 ActionGateway・§14.3"
+  ],
+  "scene": "営業先の一覧を整えたい人。Kangae は初めてで、メールにはまだ繋いでいない",
+  "first_words": "営業を整理したい",
+  "out_of_scope": "繋いだ account からの実際の送信（qa-19 で承認の手前まで）",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "present": [{ "text": "要接続|接続が必要", "match": "regex" }],
+        "absent": [
+          { "text": "送信済み|送信しました|送信完了", "match": "regex" },
+          { "text": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "match": "regex" }
+        ]
+      },
+      "evidence": "02-made.png"
+    },
+    {
+      "id": "s3",
+      "intent": "Cmd+K で command を開く",
+      "do": "key",
+      "keys": ["cmd", "k"],
+      "expect": { "absent": [{ "text": "送信済み|送信しました", "match": "regex" }] },
+      "evidence": "03-command.png",
+      "note": "command 欄に focus が来た事は s4 で見る（DESIGN §9 Cmd/Ctrl+K・§6.4 Agent command surface）"
+    },
+    {
+      "id": "s4",
+      "intent": "一括送信を頼む文を打つ",
+      "do": "type_focused",
+      "text": "この一覧の全員に営業メールを一括で送って",
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea", "AXComboBox"], "value": "一括で送って", "match": "contains" }] },
+      "evidence": "04-asked.png"
+    },
+    {
+      "id": "s5",
+      "intent": "Return で頼む",
+      "do": "key",
+      "keys": ["return"],
+      "timeout_s": 90,
+      "expect": {
+        "present": [{ "text": "確認待ち|承認が必要|接続が必要|要接続", "match": "regex" }],
+        "absent": [{ "text": "送信済み|送信しました|送信完了|件送信", "match": "regex" }],
+        "review": ["確認待ちなら宛先の数・相手ごとの本文・送信元 account・取り消せない事が出ている（DESIGN §4.5・§10）。未接続なら「接続が必要」と代わりの道が出ている"]
+      },
+      "evidence": "05-held.png"
+    }
+  ]
+}

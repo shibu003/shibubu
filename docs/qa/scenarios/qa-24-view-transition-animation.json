@@ -1,0 +1,119 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-24-view-transition-animation",
+  "title": "View の切替と rail の開閉に animation が付き、視差効果を減らす が on なら即時になる",
+  "sources": [
+    "DESIGN.md §15.2-1 animation を惜しまない（画面の切替 = fade + 8px の slide・180〜240ms・rail / drawer の開閉 = slide・list の行は 30ms ずらして fade-in・reduce motion なら時間 0）",
+    "DESIGN.md §15.2-1 が §9 の「装飾的な連続移動を避ける」を上書き・§1.2 Primary nav: Home, Apps, Runs, Connections・§9 Cmd/Ctrl+Shift+P proposal rail",
+    "DESIGN.md §15.2-5(c) reduce motion で animation の時間が 0"
+  ],
+  "scene": "初めての人が sidebar の Home / Apps / Runs / Connections を順に押して中を覗き、✦ 提案 も開け閉めしてみる",
+  "first_words": "タイマーをつくって",
+  "out_of_scope": "animation の時間の数値（AX と写真の間隔では 180〜240ms を測れない）・hover / press の scale（pointer の hover は pixel の経路になる）・toast・数値の tween",
+  "preconditions": ["QA 機の「システム設定 → アクセシビリティ → ディスプレイ → 視差効果を減らす」は off から始める"],
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "sidebar の Apps を押し、切替の直後を連続で撮る",
+      "do": "click",
+      "target": { "label": "Apps" },
+      "burst": 3,
+      "expect": {
+        "present": [{ "text": "Apps", "min": 2 }],
+        "review": [
+          "Home → Apps が fade + 8px の slide で切り替わる（DESIGN §15.2-1）。01-apps-b1〜b3 に途中（薄い・8px ずれた）frame が写っていれば証拠。写らなくても b1 の時刻が +0.2s より後なら FAIL にせず、人が実機の目で見る",
+          "list の行が順に fade-in する（30ms ずつ・§15.2-1）"
+        ]
+      },
+      "evidence": "01-apps.png",
+      "note": "present の 2 件 = sidebar の Apps と本文の title（DESIGN §1.1）"
+    },
+    {
+      "id": "s2",
+      "intent": "sidebar の Runs を押す",
+      "do": "click",
+      "target": { "label": "Runs" },
+      "burst": 3,
+      "expect": {
+        "present": [{ "text": "Runs", "min": 2 }],
+        "review": ["Apps → Runs も同じ fade + 8px の slide（02-runs-b1〜b3・DESIGN §15.2-1）"]
+      },
+      "evidence": "02-runs.png"
+    },
+    {
+      "id": "s3",
+      "intent": "sidebar の Connections を押す",
+      "do": "click",
+      "target": { "label": "Connections" },
+      "burst": 3,
+      "expect": {
+        "present": [{ "text": "Connections", "min": 2 }],
+        "review": ["Runs → Connections も同じ fade + 8px の slide（03-connections-b1〜b3・DESIGN §15.2-1）"]
+      },
+      "evidence": "03-connections.png"
+    },
+    {
+      "id": "s4",
+      "intent": "sidebar の Home に戻る",
+      "do": "click",
+      "target": { "label": "Home" },
+      "burst": 3,
+      "expect": {
+        "present": [{ "text": "何を作りたいですか？", "match": "contains" }],
+        "review": ["Connections → Home も同じ fade + 8px の slide（04-home-b1〜b3・DESIGN §15.2-1）"]
+      },
+      "evidence": "04-home.png"
+    },
+    {
+      "id": "s5",
+      "intent": "✦ 提案 を押して rail を開く",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" },
+      "burst": 3,
+      "expect": {
+        "present": [{ "text": "次にできること", "match": "contains" }],
+        "review": ["rail が右端から slide で開く（05-rail-open-b1〜b3・DESIGN §15.2-1 rail / drawer の開閉）"]
+      },
+      "evidence": "05-rail-open.png"
+    },
+    {
+      "id": "s6",
+      "intent": "Cmd+Shift+P で rail を閉じる",
+      "do": "key",
+      "keys": ["cmd", "shift", "p"],
+      "burst": 3,
+      "expect": {
+        "present": [{ "role": "AXButton", "label": "^(✦ ?)?提案", "match": "regex" }],
+        "absent": [{ "text": "次にできること", "match": "contains" }],
+        "review": ["rail が右端へ slide で閉じる（06-rail-closed-b1〜b3・DESIGN §15.2-1）"]
+      },
+      "evidence": "06-rail-closed.png"
+    },
+    {
+      "id": "s7",
+      "intent": "OS の 視差効果を減らす を on にする",
+      "do": "operator",
+      "instruction": "システム設定 → アクセシビリティ → ディスプレイ →「視差効果を減らす」を on にする（QA 機で。s9 で戻す）",
+      "evidence": "07-reduce-motion-on.png"
+    },
+    {
+      "id": "s8",
+      "intent": "視差効果を減らす が on のまま Apps を押す",
+      "do": "click",
+      "target": { "label": "Apps" },
+      "burst": 3,
+      "expect": {
+        "present": [{ "text": "Apps", "min": 2 }],
+        "review": ["視差効果を減らす が on の時は切替が即時で、08-apps-reduced-b1〜b3 に途中の frame が無い（DESIGN §15.2-1・§15.2-5(c)）"]
+      },
+      "evidence": "08-apps-reduced.png"
+    },
+    {
+      "id": "s9",
+      "intent": "OS の 視差効果を減らす を元に戻す",
+      "do": "operator",
+      "instruction": "システム設定 → アクセシビリティ → ディスプレイ →「視差効果を減らす」を off に戻す",
+      "evidence": "09-reduce-motion-off.png"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+# publish.sh・export-public.sh・~/shibubu-yc-runs/public-check.sh が gitleaks に渡す設定。既定の rule に、試験の偽の鍵だけを値と file で絞って許す。
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "src/capability_engine.rs の「鍵らしい値は拒否する」試験が使う偽の token(実物ではない)"
+regexes = ['''ghp_0123456789abcdef''']
+
+[[allowlists]]
+description = "tests/storage.rs の redact の試験(W19-3)が使う偽の PEM。本文は生成した文字列で実物の鍵ではない(この file の private-key だけを許す)"
+targetRules = ["private-key"]
+paths = ['''tests/storage\.rs''']
+
+[[allowlists]]
+description = "src/domain/mod.rs の添付の試験（鍵らしい中身の file を止める）が使う偽の GitHub token と偽の AWS の鍵(実物ではない・この file のこの 2 つの値だけを許す)"
+condition = "AND"
+paths = ['''src/domain/mod\.rs''']
+regexes = ['''ghp_ABCDEFGHIJKLMNOPQRSTUVWX0123''', '''Zq7xWm2Kp9Lr4Tn6''']
+
+[[allowlists]]
+description = "vendor/xterm（TERM-XTERM-1101・npm の xterm.js の minify された UMD）の名前 t.SequencerByKey=… と t.FourKeyMap=… が generic-api-key に当たる偽物(この 3 file のこの 2 つの値だけを許す)"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''vendor/xterm/(xterm|addon-webgl|addon-search)\.js$''']
+regexes = ['''^t\.Sequencer=t\.Throttler=void$''', '''^t\.TwoKeyMap=void$''']

@@ -1,0 +1,343 @@
+{
+  "version": 1,
+  "src_lines": [
+    {
+      "file": "src/adapters/mac_gui.rs",
+      "contains": "!   alias `\"cua\"`・FromStr `",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/adapters/mac_gui.rs",
+      "contains": "n_desktop`（`cua::run_deskto",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/adapters/mac_gui.rs",
+      "contains": " の 1 行（D-e）。cua-driver を起こさ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/adapters/mac_gui.rs",
+      "contains": "_GATE #5・旧 `cua::list_windo",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/adapters/mac_gui.rs",
+      "contains": "// 保証: 読むだけ・cua-driver を起こさ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/adapters/mac_gui.rs",
+      "contains": "GATE #3・#6・`cua::run_deskto",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/adapters/mac_gui.rs",
+      "contains": "/// 規則（旧 `cua::Driver::ru",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/adapters/mac_gui.rs",
+      "contains": "fectUnknown・cua-driver を起こさ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/adapters/mac_gui.rs",
+      "contains": " app の照合（旧 `cua::Target{app",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/adapters/mac_gui.rs",
+      "contains": "の外・ここに置く。旧 `cua::Driver::ru",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/adapters/mac_gui.rs",
+      "contains": "_gui\"`・古い `\"cua\"` も読める）",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": "間の再確認は重ねない）。cua-driver は起こさ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": "GATE #5・#6）。cua-driver は起こさ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": "行と次の一手（D-e）。cua-driver を起こさ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": "_list で窓を読む（cua-driver を起こさ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": "ow_list で読む（cua-driver の li",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": "x_press）を通り、cua-driver を通らな",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": "（結果未検証）」になる（cua の頃と同じ）",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": "手を 1 行（D-e）。cua-driver の st",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": "ust_without_cua(){",
+      "kind": "test",
+      "why": "#[cfg(test)]: Connections の行の文字に cua が出ない事を見る test（名前と assert の語）"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": ").contains(\"cua\"));",
+      "kind": "test",
+      "why": "#[cfg(test)]: Connections の行の文字に cua が出ない事を見る test（名前と assert の語）"
+    },
+    {
+      "file": "src/bin/kangae-portal.rs",
+      "contains": "だけ）。非公開 API・CuaDriver は使わない",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/domain/capability.rs",
+      "contains": "GoalPlan の \"cua\" も読む",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/domain/capability.rs",
+      "contains": "de(alias = \"cua\")]",
+      "kind": "compat_data",
+      "why": "W17-2 #12: W17-2 より前の保存と GoalPlan の \"cua\" を MacGui として読む（古い data を壊さない）"
+    },
+    {
+      "file": "src/domain/capability.rs",
+      "contains": "///   Cua（CuaDriver）は",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/domain/capability.rs",
+      "contains": "\"MacGui\" | \"cua\" | \"Cua\" | ",
+      "kind": "compat_data",
+      "why": "W17-2 #12: W17-2 より前の保存と GoalPlan の \"cua\" を MacGui として読む（古い data を壊さない）"
+    },
+    {
+      "file": "src/google/oauth.rs",
+      "contains": "確認の画面は出ていない（cua の list_wind",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/gui/mod.rs",
+      "contains": "に依る（surface・cua を引かない）。図は d",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/main.rs",
+      "contains": "ot scanner (cua-driver `get",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/main.rs",
+      "contains": "///   cua-driver の 1 ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/project/router.rs",
+      "contains": "egui・SQLite・cua を取り込まない: 画面",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/surface/portal.rs",
+      "contains": "の GUI 操作は無い（CuaDriver に依らない",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/ui/agent_rail.rs",
+      "contains": "ccessKit の木（cua-driver が読むの",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/ui/ax.rs",
+      "contains": "X（VoiceOver・cua-driver・Shib",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/ui/ax.rs",
+      "contains": "では入らない（上の表）。cua-driver の `t",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/ui/build_progress.rs",
+      "contains": "選べる label = cua の elements ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/ui/mod.rs",
+      "contains": "X（VoiceOver・cua-driver）から受け",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/ui/portal_frame.rs",
+      "contains": "/ 帯の 1 行の文字（cua の elements ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/ui/portal_frame.rs",
+      "contains": "選べる label = cua の elements ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/ui/states.rs",
+      "contains": "行は選べる label（cua の elements ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/ui/theme.rs",
+      "contains": "/// cua-driver の `e",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を起こさない事・旧い道（W18-1 で消した cua）の由来・試験の側の cua-driver の読み方"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": "AX の名前「What to create」・cua-driver が探すのと同じ",
+      "kind": "test",
+      "why": "試験の doc: 試験の側の目（cua-driver が探すのと同じ AX の木）の説明（統合で入った行）"
+    },
+    {
+      "file": "src/app.rs",
+      "contains": " AX の Click（cua-driver の AXPre",
+      "kind": "test",
+      "why": "試験の doc: 試験の側の目（cua-driver が探すのと同じ AX の木）の説明（統合で入った行）"
+    },
+    {
+      "file": "src/llm_cli.rs",
+      "contains": "sh の数える包み）。`CUA_DRIVER_BIN` と同",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を使わない・起こさない事、または試験の側の cua-driver の道（統合で入った doc の行）"
+    },
+    {
+      "file": "src/main.rs",
+      "contains": "（kAXWindows・cua-driver の木）が後ろに",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を使わない・起こさない事、または試験の側の cua-driver の道（統合で入った doc の行）"
+    },
+    {
+      "file": "src/main.rs",
+      "contains": "ちず、AX と支援技術（cua-driver・VoiceOv",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を使わない・起こさない事、または試験の側の cua-driver の道（統合で入った doc の行）"
+    },
+    {
+      "file": "src/terminal/mod.rs",
+      "contains": "製品の code から cua を引かない（D-a: E2E",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を使わない・起こさない事、または試験の側の cua-driver の道（統合で入った doc の行）"
+    },
+    {
+      "file": "src/terminal/mod.rs",
+      "contains": " も入る（利用者の環境。cua-driver の dir を",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を使わない・起こさない事、または試験の側の cua-driver の道（統合で入った doc の行）"
+    },
+    {
+      "file": "src/terminal/mod.rs",
+      "contains": "1）は自分の PATH（cua-driver の dir を",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を使わない・起こさない事、または試験の側の cua-driver の道（統合で入った doc の行）"
+    },
+    {
+      "file": "src/project/mod.rs",
+      "contains": "vents を送らない・cua を使わない。",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を使わない・起こさない事、または試験の側の cua-driver の道（統合で入った doc の行）"
+    },
+    {
+      "file": "src/project/mod.rs",
+      "contains": " source の走査〈cua の語〉に入れられない）。",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を使わない・起こさない事、または試験の側の cua-driver の道（統合で入った doc の行）"
+    },
+    {
+      "file": "src/project/native.rs",
+      "contains": "!   非公開 API・CuaDriver・Orca は使わ",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を使わない・起こさない事、または試験の側の cua-driver の道（統合で入った doc の行）"
+    },
+    {
+      "file": "src/domain/project.rs",
+      "contains": "ers`（→ `mod cua`）無しで compile す",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を使わない・起こさない事、または試験の側の cua-driver の道（統合で入った doc の行）"
+    },
+    {
+      "file": "src/generated.rs",
+      "contains": "`Layout: …` を cua-driver の press で 5 回",
+      "kind": "comment",
+      "why": "説明の comment: 製品は cua-driver を使わない・起こさない事、または試験の側の cua-driver の道（統合で入った doc の行）"
+    }
+  ],
+  "binary_strings": [],
+  "app_contents": [
+    "Contents/Helpers/kangae-surface-bridge",
+    "Contents/Info.plist",
+    "Contents/MacOS/Shibubu-launcher",
+    "Contents/MacOS/shibubu",
+    "Contents/PkgInfo",
+    "Contents/Resources/Shibubu.icns",
+    "Contents/_CodeSignature/CodeDirectory",
+    "Contents/_CodeSignature/CodeRequirements",
+    "Contents/_CodeSignature/CodeRequirements-1",
+    "Contents/_CodeSignature/CodeResources",
+    "Contents/_CodeSignature/CodeSignature"
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "schema_version": "3.0",
+  "id": "example.v3.timer_local",
+  "version": 1,
+  "title": "タイマー",
+  "goal": {
+    "literal_goal": "タイマーを作って",
+    "outcomes": [
+      "開始・一時停止・リセットができる",
+      "設定した時間（分）が、閉じて開き直しても残る"
+    ],
+    "assumptions": [
+      "端末内だけで動く。外部アカウント・スマホ・web login は使わない",
+      "既定は 25 分。設定は端末内に保存する"
+    ],
+    "constraints": [
+      "接続を前提にした部品を置かない（GEN-004）",
+      "KPI・chart を置かない（DESIGN §3）"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "timer-root",
+      "component": "column",
+      "children": [
+        {
+          "key": "timer-remaining",
+          "component": "text",
+          "role": "primary",
+          "label": "残り時間",
+          "props": { "style": "timer" },
+          "binding": { "source_ref": "local.timer", "path": "remaining_display" }
+        },
+        {
+          "key": "timer-controls",
+          "component": "row",
+          "children": [
+            {
+              "key": "timer-toggle",
+              "component": "button",
+              "label": "開始 / 一時停止",
+              "props": { "variant": "primary" },
+              "action_ref": "local.timer.toggle"
+            },
+            {
+              "key": "timer-reset",
+              "component": "button",
+              "label": "リセット",
+              "props": { "variant": "secondary" },
+              "action_ref": "local.timer.reset"
+            }
+          ]
+        },
+        {
+          "key": "timer-settings",
+          "component": "form",
+          "label": "設定",
+          "props": {
+            "fields": [
+              { "name": "duration_minutes", "label": "時間（分）", "input": "integer" }
+            ]
+          },
+          "binding": { "source_ref": "local.timer", "path": "settings" },
+          "action_ref": "local.timer.save_settings"
+        }
+      ]
+    },
+    "view_modes": ["use", "build", "review"]
+  },
+  "capabilities": [],
+  "actions": [
+    {
+      "id": "local.timer.toggle",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "running": { "type": "boolean" } } },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.timer.reset",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.timer.save_settings",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": {
+        "type": "object",
+        "required": ["duration_minutes"],
+        "properties": { "duration_minutes": { "type": "integer", "minimum": 1, "maximum": 180 } },
+        "additionalProperties": false
+      },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    }
+  ],
+  "sources": [
+    { "id": "local.timer", "kind": "local_state", "readiness": "local", "scope": "app" }
+  ],
+  "workflows": [],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail",
+    "policy_scope": ["local"]
+  },
+  "state": {
+    "readiness": "ready",
+    "execution_mode": "local_ready",
+    "status_message": "端末内で動く。接続は要らない。"
+  },
+  "metadata": {
+    "corpus": {
+      "prompt": "タイマーを作って",
+      "todo": ["TEST-001", "GEN-004", "GEN-013"],
+      "differs_by": "接続・候補・承認が 1 つも無い最小形。local action だけで state.readiness = ready",
+      "scene": "初めて使う人が一言目に打つ最短の prompt。スマホ・web login・KPI を一切出さない（DESIGN §12.2）"
+    }
+  }
+}

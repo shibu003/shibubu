@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kangae.local/placement_template_v1.schema.json",
+  "title": "PlacementTemplate v1（配置の型・W13c・29 通目）",
+  "description": "どの区画（main / side / top / bottom / drawer）に何の種類の部品を置くか。部品の選び方は変えず、置き方だけ。正本の型は src/composer/layout.rs の PlacementTemplate（deny_unknown_fields）。意味の検査（Page ごとに main が 1 つ・同じ区画は 1 回・main と side の size は足して 1 で main ≥ 0.6）は layout::validate_template。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "goal_hint", "pages"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1, "pattern": "^[a-z0-9_-]+$" },
+    "name": { "type": "string", "minLength": 1, "description": "画面の「配置: <名前>」に出す名前" },
+    "goal_hint": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "一言にこの語が在れば既定にする（大小文字を見ない・一番多く合う型）。空なら既定にしない"
+    },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["page", "regions"],
+        "properties": {
+          "page": { "type": "string", "minLength": 1, "description": "Page の title（大小文字を見ない）か *（title の合う entry が無い Page 全部）" },
+          "regions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["slot", "accepts"],
+              "properties": {
+                "slot": { "enum": ["main", "side", "top", "bottom", "drawer"] },
+                "accepts": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "enum": ["terminal", "mirror", "native_app", "web", "repo", "file", "run_receipt", "notes", "recorder", "waveform", "link", "status", "form", "timeline", "other"] }
+                },
+                "size": { "type": ["number", "null"], "minimum": 0.1, "maximum": 0.9, "description": "main と side の幅の割合（他の区画は null）" },
+                "max": { "type": "integer", "minimum": 1, "description": "G88a: この区画に置く部品の数の上限（無ければ無制限）。満ちたら次に受ける区画へ・どこも受けなければ main" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

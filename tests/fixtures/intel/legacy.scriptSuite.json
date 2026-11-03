@@ -1,0 +1,1 @@
+{"Name":"Legacy","AppleEventCode":"lgcy","Commands":{"Reload":{"AppleEventCode":"rlod","CommandClass":"NSScriptCommand"}},"Classes":{"NSApplication":{"Superclass":"NSCoreSuite.NSApplication","Attributes":{"currentNote":{"Type":"NSString"}}},"Document":{"Superclass":"NSCoreSuite.NSDocument","Attributes":{"text":{"Type":"NSString"},"modified":{"Type":"NSNumber<Bool>"}}}}}

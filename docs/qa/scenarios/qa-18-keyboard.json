@@ -1,0 +1,83 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-18-keyboard",
+  "title": "keyboard だけで新しい app を頼み直し、command を開ける（Cmd+N・Cmd+Enter・Cmd+K）",
+  "sources": [
+    "DESIGN.md §9 Primary interactions keyboard-accessible（Cmd/Ctrl+K command・Cmd/Ctrl+N new app・Cmd/Ctrl+Enter generate/submit・Escape dismiss overlay）",
+    "DESIGN.md §1.2 New app creation from one command field in Home and global Cmd/Ctrl + K / Cmd/Ctrl + N・§6.1"
+  ],
+  "scene": "mouse より keyboard で動く人",
+  "first_words": "タイマーをつくって",
+  "out_of_scope": "Tab の順が見た目の順と同じか（AX に focus の順が出ない・写真では見えない）",
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": { "absent": [{ "text": "何を作りたいですか？", "match": "contains" }] },
+      "evidence": "02-app.png"
+    },
+    {
+      "id": "s3",
+      "intent": "Cmd+N で新しい app の入力に戻る",
+      "do": "key",
+      "keys": ["cmd", "n"],
+      "expect": { "present": [{ "text": "何を作りたいですか？", "match": "contains" }] },
+      "evidence": "03-new.png"
+    },
+    {
+      "id": "s4",
+      "intent": "次の一言を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "在庫管理",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "在庫管理" }] },
+      "evidence": "04-typed-next.png"
+    },
+    {
+      "id": "s5",
+      "intent": "Cmd+Enter で作る",
+      "do": "key",
+      "keys": ["cmd", "return"],
+      "timeout_s": 120,
+      "expect": { "absent": [{ "text": "何を作りたいですか？", "match": "contains" }] },
+      "evidence": "05-submitted.png"
+    },
+    {
+      "id": "s6",
+      "intent": "Cmd+K で command を開く",
+      "do": "key",
+      "keys": ["cmd", "k"],
+      "expect": { "absent": [{ "text": "何を作りたいですか？", "match": "contains" }] },
+      "evidence": "06-command.png",
+      "note": "command 欄に focus が来た事は s7 で見る"
+    },
+    {
+      "id": "s7",
+      "intent": "そのまま打つ",
+      "do": "type_focused",
+      "text": "タイマー",
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea", "AXComboBox"], "value": "タイマー" }] },
+      "evidence": "07-command-typed.png"
+    },
+    {
+      "id": "s8",
+      "intent": "Escape で閉じる",
+      "do": "key",
+      "keys": ["escape"],
+      "expect": { "review": ["command が overlay なら閉じ、header の欄なら focus が外れる（DESIGN §9 Escape closes overlay）"] },
+      "evidence": "08-escaped.png"
+    }
+  ]
+}

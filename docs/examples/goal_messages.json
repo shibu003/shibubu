@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "id": "messages",
+  "prompt": "複数のメッセージを一つにまとめたい",
+  "goal": {
+    "objective": "選択したサービスの会話をひとつのUIで閲覧する",
+    "success_signal": "選択済みの接続先から会話を並べて読める"
+  },
+  "requirements": [
+    {
+      "id": "merge",
+      "statement": "メッセージをまとめる",
+      "origin": "explicit",
+      "necessity": "essential",
+      "confidence": 1
+    },
+    {
+      "id": "sources",
+      "statement": "対象サービスは未指定",
+      "origin": "inferred",
+      "necessity": "essential",
+      "confidence": 0.95
+    }
+  ],
+  "needs": [
+    {
+      "id": "thread_view",
+      "description": "スレッド一覧と本文を表示",
+      "effect": "local_write",
+      "status": "planned_local"
+    },
+    {
+      "id": "message_import",
+      "description": "認可済みサービスから会話を読み込む",
+      "effect": "read",
+      "status": "needs_connection"
+    }
+  ],
+  "source_policy": "requested_connection",
+  "candidate_sources": [],
+  "ui_intents": [
+    {
+      "id": "unified_inbox",
+      "purpose": "接続待ちのスレッドと本文のUI",
+      "primary": true,
+      "representation_hint": "list-detail"
+    }
+  ],
+  "questions": [
+    {
+      "id": "choose_sources",
+      "text": "どのメッセージサービスやアカウントをまとめますか？",
+      "blocking_need_id": "message_import",
+      "reason": "privacy",
+      "suggested_default": "今は接続せず、画面だけ作る"
+    }
+  ],
+  "verification_plan": [
+    "無承認で全アカウントを走査しない",
+    "連携失敗時も空のInboxを表示できる"
+  ]
+}

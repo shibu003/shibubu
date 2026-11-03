@@ -1,0 +1,11 @@
+{
+  "schema_version": "3.0", "id": "broken.missing_action", "version": 1, "title": "button の action_ref が無い",
+  "goal": {"literal_goal": "研究ノートを作りたい", "outcomes": ["研究ノートを作りたい"]},
+  "composition": {"root": {"key": "research-root", "component": "column", "props": {}, "children": [
+    {"key": "research-save", "component": "button", "props": {"label": "保存"}, "action_ref": "local.notes.sav"}
+  ]}},
+  "actions": [{"id": "local.notes.save", "effect": "local_write", "readiness": "preview_only", "input_schema": {"type": "object"}, "required_scopes": []}],
+  "sources": [],
+  "agent": {"suggestions_enabled": true, "autonomy_level": "suggest_only", "entrypoint": "agent_rail"},
+  "state": {"readiness": "preview", "execution_mode": "local_demo"}
+}

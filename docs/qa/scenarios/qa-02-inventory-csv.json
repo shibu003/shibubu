@@ -1,0 +1,136 @@
+{
+  "schema": "qa_scenario_v1",
+  "id": "qa-02-inventory-csv",
+  "title": "「在庫管理」→ CSV を読み込み・直し・保存する",
+  "sources": [
+    "IMPLEMENTATION_TODO.md §12「在庫管理」→CSVを読み込み/編集/保存",
+    "KANGAE_MASTER_SPEC.md §3.2 Local Function（録音、CSV、タイマー）・§15 UC-01",
+    "DESIGN.md §11 まだデータがありません・§4.3 Table"
+  ],
+  "scene": "小さな店の人。手元に在庫の CSV が 1 つある。どの service にも繋がない",
+  "first_words": "在庫管理",
+  "out_of_scope": "列の並べ替え・CSV 以外の形式。検索の追加と Undo は qa-08",
+  "fixtures": { "inventory.csv": "品名,数量,置き場所\nりんご,12,棚A\nみかん,30,棚B\n" },
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Home の「何を作りたいですか？」に一言目を打つ",
+      "do": "type",
+      "target": { "role": ["AXTextArea", "AXTextField"], "label": "何を作りたいですか？" },
+      "text": "${FIRST_WORDS}",
+      "expect": { "present": [{ "role": ["AXTextArea", "AXTextField"], "value": "${FIRST_WORDS}" }] },
+      "evidence": "01-typed.png"
+    },
+    {
+      "id": "s2",
+      "intent": "「作る」を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "作る", "match": "contains" },
+      "timeout_s": 120,
+      "expect": {
+        "present": [{ "text": "まだデータがありません", "match": "contains" }],
+        "absent": [{ "text": "りんご", "match": "contains" }]
+      },
+      "evidence": "02-empty.png",
+      "note": "生成の直後は空の表示（DESIGN §11）。偽の在庫を並べない（§1.1 Do not show invented data）"
+    },
+    {
+      "id": "s3",
+      "intent": "CSV の読み込みを押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "読み込", "match": "contains" },
+      "in": "dialog",
+      "expect": { "present": [{ "role": "AXButton", "text": "^(開く|Open)$", "match": "regex" }] },
+      "evidence": "03-open-panel.png",
+      "note": "file を選ぶ画面は macOS の物（label は OS の言語）。押す釦は主窓で探し、期待は別窓で見る"
+    },
+    {
+      "id": "s4",
+      "intent": "file を選ぶ画面で Cmd+Shift+G（場所を打つ欄を出す）",
+      "do": "key",
+      "keys": ["cmd", "shift", "g"],
+      "in": "dialog",
+      "expect": { "present": [{ "role": "AXButton", "text": "^(開く|Open)$", "match": "regex" }] },
+      "evidence": "04-goto.png",
+      "note": "効き目（欄に focus が来た事）は s5 で見る"
+    },
+    {
+      "id": "s5",
+      "intent": "CSV の場所を打つ",
+      "do": "type_focused",
+      "text": "${FIXTURES}/inventory.csv",
+      "in": "dialog",
+      "expect": { "present": [{ "value": "inventory.csv", "match": "contains" }] },
+      "evidence": "05-path.png"
+    },
+    {
+      "id": "s6",
+      "intent": "Return でその場所へ移る",
+      "do": "key",
+      "keys": ["return"],
+      "in": "dialog",
+      "settle_s": 1,
+      "expect": { "present": [{ "text": "inventory.csv", "match": "contains" }] },
+      "evidence": "06-selected.png"
+    },
+    {
+      "id": "s7",
+      "intent": "Return で開き、在庫が並ぶのを待つ",
+      "do": "key",
+      "keys": ["return"],
+      "in": "dialog",
+      "settle_s": 1,
+      "timeout_s": 30,
+      "expect": { "present": [{ "text": "りんご", "match": "contains" }, { "text": "みかん", "match": "contains" }] },
+      "evidence": "07-loaded.png"
+    },
+    {
+      "id": "s8",
+      "intent": "りんごの数量 12 を押して直し始める",
+      "do": "click",
+      "target": { "text": "12" },
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea"], "value": "12" }] },
+      "evidence": "08-editing.png",
+      "note": "表が最初から入力欄でも、押すと入力欄になる形でも通る"
+    },
+    {
+      "id": "s9",
+      "intent": "Cmd+A で欄の中を全部選ぶ",
+      "do": "key",
+      "keys": ["cmd", "a"],
+      "expect": { "present": [{ "role": ["AXTextField", "AXTextArea"], "value": "12" }] },
+      "evidence": "09-selected.png",
+      "note": "効き目（全部選べた事）は s10 で 1215 にならない事で見る"
+    },
+    {
+      "id": "s10",
+      "intent": "15 と打つ",
+      "do": "type_focused",
+      "text": "15",
+      "expect": {
+        "present": [{ "role": ["AXTextField", "AXTextArea"], "value": "15" }],
+        "absent": [{ "text": "12" }, { "text": "1215|1512", "match": "regex" }]
+      },
+      "evidence": "10-edited.png"
+    },
+    {
+      "id": "s11",
+      "intent": "保存を押す",
+      "do": "click",
+      "target": { "role": "AXButton", "label": "保存", "match": "contains" },
+      "timeout_s": 20,
+      "expect": { "files": [{ "path": "${FIXTURES}/inventory.csv", "regex": "りんご[\",\\s]+15" }] },
+      "evidence": "11-saved.png",
+      "note": "保存 = 読み込んだ CSV そのものに書き戻す、と読む（IMPLEMENTATION_TODO §12）。別名で保存の画面が出る作りなら、ここが FAIL になって分かる"
+    },
+    {
+      "id": "s12",
+      "intent": "Kangae を閉じて開き直す",
+      "do": "restart",
+      "timeout_s": 30,
+      "expect": { "present": [{ "text": "りんご", "match": "contains" }, { "text": "15" }] },
+      "evidence": "12-restored.png",
+      "note": "UC-01 再起動で復元"
+    }
+  ]
+}

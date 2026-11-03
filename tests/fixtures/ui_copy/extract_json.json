@@ -1,0 +1,13 @@
+{
+  "title": "表題は見る",
+  "input_schema": {
+    "description": "schema 直下の説明は見ない",
+    "type": "object",
+    "properties": { "q": { "description": "properties の下も見ない" } }
+  },
+  "states": ["配列の状態も見る"],
+  "screens": [
+    { "label": "画面の名前も見る", "states": { "loading": "読み込みの文も見る" } }
+  ],
+  "note": "鍵の無い文は見ない"
+}

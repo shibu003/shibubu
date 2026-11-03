@@ -1,0 +1,222 @@
+{
+  "schema_version": "3.0",
+  "id": "example.v3.coding_workspace",
+  "version": 1,
+  "title": "コードの作業場",
+  "goal": {
+    "literal_goal": "今やっているコードの作業を 1 つの画面にまとめたい",
+    "outcomes": [
+      "やる事の一覧と、作業中のメモが同じ画面にある",
+      "Issue の取得元を繋いだ時だけ、Issue の一覧が出る",
+      "test の実行は、実行環境を繋いだ時だけ押せる"
+    ],
+    "assumptions": [
+      "GitHub は候補の 1 つ。繋ぐまで Issue は読まない（GEN-013: GitHub を既定にしない）",
+      "test の実行環境（IDE か terminal）は未選択"
+    ],
+    "constraints": [
+      "接続前に外部の Issue を読まない（GEN-003）",
+      "生成 app から任意の shell を実行しない（CUA_ACTION_RUNTIME）"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "coding-root",
+      "component": "column",
+      "children": [
+        {
+          "key": "coding-split",
+          "component": "split",
+          "layout": { "ratio": [0.6, 0.4] },
+          "children": [
+            {
+              "key": "coding-left",
+              "component": "column",
+              "role": "primary",
+              "children": [
+                {
+                  "key": "coding-tasks",
+                  "component": "list",
+                  "label": "やる事",
+                  "binding": { "source_ref": "local.tasks", "path": "items" },
+                  "states": { "empty": "まだやる事がありません。「追加する」で 1 つ目を書く" }
+                },
+                {
+                  "key": "coding-task-add",
+                  "component": "button",
+                  "label": "追加する",
+                  "props": { "variant": "primary" },
+                  "action_ref": "local.tasks.add"
+                },
+                {
+                  "key": "coding-issues",
+                  "component": "table",
+                  "label": "Issue（取得元は未選択）",
+                  "props": { "columns": ["title", "status", "updated_at"] },
+                  "binding": { "source_ref": "optional.issue_tracker", "path": "issues" },
+                  "states": {
+                    "requires_connection": "Issue の取得元を Connections で選ぶと表示する。候補: GitHub（未接続）",
+                    "empty": "Issue はありません"
+                  }
+                },
+                {
+                  "key": "coding-issues-row",
+                  "component": "row",
+                  "children": [
+                    {
+                      "key": "coding-issues-connect",
+                      "component": "button",
+                      "label": "取得元を選ぶ",
+                      "props": { "variant": "secondary" },
+                      "action_ref": "local.connection.open"
+                    },
+                    {
+                      "key": "coding-issues-refresh",
+                      "component": "button",
+                      "label": "Issue を読み込む",
+                      "props": { "variant": "ghost" },
+                      "action_ref": "issues.read",
+                      "states": { "disabled": "取得元を繋ぐまで読めない。繋いでも読み取りだけ" }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "key": "coding-right",
+              "component": "column",
+              "role": "context",
+              "children": [
+                {
+                  "key": "coding-notes",
+                  "component": "editor",
+                  "label": "作業メモ",
+                  "binding": { "source_ref": "local.notes", "path": "body" }
+                },
+                {
+                  "key": "coding-notes-save",
+                  "component": "button",
+                  "label": "保存",
+                  "props": { "variant": "secondary" },
+                  "action_ref": "local.notes.save"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "coding-run-row",
+          "component": "row",
+          "children": [
+            {
+              "key": "coding-run-tests",
+              "component": "button",
+              "label": "test を実行",
+              "props": { "variant": "secondary" },
+              "action_ref": "tests.run",
+              "states": { "disabled": "実行環境（IDE か terminal）を繋ぐまで押せない。生成 app は shell を直接叩かない" }
+            },
+            {
+              "key": "coding-run-progress",
+              "component": "run_progress",
+              "label": "直近の実行",
+              "binding": { "source_ref": "local.runs", "path": "latest" },
+              "states": { "empty": "まだ実行していません" }
+            }
+          ]
+        }
+      ]
+    },
+    "view_modes": ["use", "build", "inspect", "run", "review"]
+  },
+  "capabilities": [
+    { "id": "issues.read", "provider": "github", "readiness": "discoverable", "required_scopes": ["issues.read"], "adapter": "api" },
+    { "id": "tests.run", "provider": null, "readiness": "discoverable", "required_scopes": ["workspace.execute"], "adapter": "cua" }
+  ],
+  "actions": [
+    {
+      "id": "local.tasks.add",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["title"], "properties": { "title": { "type": "string", "minLength": 1 } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.tasks.toggle_done",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["task_id"], "properties": { "task_id": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.notes.save",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "required": ["body"], "properties": { "body": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "local.connection.open",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "properties": { "capability_ref": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "issues.read",
+      "capability_ref": "issues.read",
+      "effect": "external_read",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["repository"], "properties": { "repository": { "type": "string" } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "issues": { "type": "array" }, "observed_at": { "type": "string" } } },
+      "required_scopes": ["issues.read"],
+      "verifier": "read_back",
+      "requires_approval": false
+    },
+    {
+      "id": "tests.run",
+      "capability_ref": "tests.run",
+      "effect": "external_write",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["target"], "properties": { "target": { "type": "string", "description": "繋いだ実行環境に登録された test 対象の id。command 文字列は渡さない" } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "status": { "enum": ["passed", "failed", "unverified"] } } },
+      "required_scopes": ["workspace.execute"],
+      "verifier": "state_compare",
+      "requires_approval": true
+    }
+  ],
+  "sources": [
+    { "id": "local.tasks", "kind": "local_collection", "readiness": "local", "scope": "app" },
+    { "id": "local.notes", "kind": "local_state", "readiness": "local", "scope": "app" },
+    { "id": "local.runs", "kind": "local_collection", "readiness": "local", "scope": "app" },
+    { "id": "optional.issue_tracker", "kind": "external_optional", "readiness": "requires_connection", "provider": null, "last_observed_at": null }
+  ],
+  "workflows": [],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail",
+    "policy_scope": ["local", "issues.read:after_connection"]
+  },
+  "state": {
+    "readiness": "partial",
+    "execution_mode": "local_ready",
+    "status_message": "やる事とメモは端末内で動く。Issue と test の実行は、取得元・実行環境を繋いでから。"
+  },
+  "metadata": {
+    "corpus": {
+      "prompt": "今やっているコードの作業を 1 つの画面にまとめたい",
+      "todo": ["GEN-013", "GEN-003", "TEST-004", "LEG-007"],
+      "differs_by": "local（やる事・メモ）と候補（GitHub は capability.readiness = discoverable、source は provider null）が同居。test 実行は承認つき external_write",
+      "scene": "GitHub を prompt で名指ししていない。既定にせず、候補として disabled 理由に出すだけ"
+    }
+  }
+}

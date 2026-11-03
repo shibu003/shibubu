@@ -1,0 +1,153 @@
+{
+  "schema_version": "3.0",
+  "id": "example.v3.device_mirror",
+  "version": 1,
+  "title": "端末の画面",
+  "goal": {
+    "literal_goal": "スマホの画面を Mac で見て操作したい",
+    "outcomes": [
+      "端末を繋いだ時だけ、画面が映り、tap と入力を送れる",
+      "端末が無くても、繋ぎ方の候補と必要な許可が分かる",
+      "映した画面の中のアプリの会話 API に届く訳ではない事を隠さない"
+    ],
+    "assumptions": [
+      "OS（Android / iOS）と繋ぎ方（USB / 同じ Wi-Fi / companion app）は未選択。Android を既定にしない（GEN-013）",
+      "端末は任意。無くても app は生成される（CON-009）"
+    ],
+    "constraints": [
+      "pairing は本人の明示の同意と、取り消しの道が要る（CON-009）",
+      "画面の読み取り・入力の送信は端末ごとの scope の範囲（RUN-002）"
+    ]
+  },
+  "composition": {
+    "root": {
+      "key": "mirror-root",
+      "component": "column",
+      "children": [
+        {
+          "key": "mirror-hint",
+          "component": "text",
+          "props": { "style": "helper", "text": "端末を繋ぐと、ここに画面が映る。繋ぎ方は下の候補から。" }
+        },
+        {
+          "key": "mirror-methods",
+          "component": "list",
+          "label": "繋ぎ方の候補",
+          "binding": { "source_ref": "local.pairing_methods", "path": "items" },
+          "states": { "empty": "候補が見つからない。Connections で端末の種類を選ぶ" }
+        },
+        {
+          "key": "mirror-pair",
+          "component": "button",
+          "label": "端末を繋ぐ",
+          "props": { "variant": "primary" },
+          "action_ref": "local.connection.open"
+        },
+        {
+          "key": "mirror-screen",
+          "component": "source_surface",
+          "role": "primary",
+          "label": "端末の画面",
+          "props": { "display": "mirror" },
+          "binding": { "source_ref": "optional.device", "path": "screen" },
+          "states": { "requires_connection": "端末を繋ぐと映る。それまでは空のまま（黒い枠を出さない）" }
+        },
+        {
+          "key": "mirror-controls",
+          "component": "row",
+          "children": [
+            {
+              "key": "mirror-refresh",
+              "component": "button",
+              "label": "画面を更新",
+              "props": { "variant": "secondary" },
+              "action_ref": "device.screen.read",
+              "states": { "disabled": "端末を繋ぐまで" }
+            },
+            {
+              "key": "mirror-input",
+              "component": "button",
+              "label": "tap / 入力を送る",
+              "props": { "variant": "secondary" },
+              "action_ref": "device.input.send",
+              "states": { "disabled": "端末を繋ぎ、送る操作を確認してから。1 操作ずつ承認" }
+            }
+          ]
+        }
+      ]
+    },
+    "view_modes": ["use", "build", "inspect", "run", "review"]
+  },
+  "capabilities": [
+    { "id": "device.bridge", "provider": null, "readiness": "discoverable", "required_scopes": ["device.screen.read", "device.input.send"], "adapter": "companion" }
+  ],
+  "actions": [
+    {
+      "id": "local.connection.open",
+      "effect": "local_write",
+      "readiness": "ready",
+      "input_schema": { "type": "object", "properties": { "capability_ref": { "type": "string" } }, "additionalProperties": false },
+      "required_scopes": [],
+      "verifier": "local_state",
+      "requires_approval": false
+    },
+    {
+      "id": "device.screen.read",
+      "capability_ref": "device.bridge",
+      "effect": "external_read",
+      "readiness": "requires_connection",
+      "input_schema": { "type": "object", "required": ["device_id"], "properties": { "device_id": { "type": "string" } }, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "frame_ref": { "type": "string" }, "observed_at": { "type": "string" } } },
+      "required_scopes": ["device.screen.read"],
+      "verifier": "read_back",
+      "requires_approval": false
+    },
+    {
+      "id": "device.input.send",
+      "capability_ref": "device.bridge",
+      "effect": "external_write",
+      "readiness": "requires_connection",
+      "input_schema": {
+        "type": "object",
+        "required": ["device_id", "input"],
+        "properties": {
+          "device_id": { "type": "string" },
+          "input": {
+            "type": "object",
+            "required": ["type"],
+            "properties": { "type": { "enum": ["tap", "text", "key"] }, "x": { "type": "integer" }, "y": { "type": "integer" }, "text": { "type": "string" } }
+          }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": { "type": "object", "properties": { "status": { "enum": ["applied", "failed", "unverified"] } } },
+      "required_scopes": ["device.input.send"],
+      "verifier": "state_compare",
+      "requires_approval": true
+    }
+  ],
+  "sources": [
+    { "id": "local.pairing_methods", "kind": "local_state", "readiness": "local", "scope": "registry" },
+    { "id": "optional.device", "kind": "external_optional", "readiness": "requires_connection", "provider": null, "last_observed_at": null }
+  ],
+  "workflows": [],
+  "agent": {
+    "suggestions_enabled": true,
+    "autonomy_level": "suggest_only",
+    "entrypoint": "agent_rail",
+    "policy_scope": ["local", "device.input.send:approval_required_per_input"]
+  },
+  "state": {
+    "readiness": "partial",
+    "execution_mode": "local_ready",
+    "status_message": "端末が無い間は繋ぎ方の候補だけ。映す・操作するは pairing の同意の後。"
+  },
+  "metadata": {
+    "corpus": {
+      "prompt": "スマホの画面を Mac で見て操作したい",
+      "todo": ["GEN-013", "CON-009", "LEG-007"],
+      "differs_by": "display = mirror の source_surface に binding（端末が無い間は states.requires_connection）。入力の送信は承認つき。OS を決め打ちしない",
+      "scene": "OUT-11: 画面が映っても中のアプリの API に届く訳ではない。Android を既定にしない（goal_phone_bridge.json の v3 版）"
+    }
+  }
+}
